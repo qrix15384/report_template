@@ -12,7 +12,7 @@ const facilityRows = [
     refi: 'Med',
   },
   {
-    lender: 'Fintech Platform',
+    lender: 'MTN Momo Loan',
     type: 'Digital Loan',
     approved: 'GHS 10,000',
     outstanding: 'GHS 4,500',
@@ -677,7 +677,7 @@ export default function CreditReport() {
           {/* Account Detail 2 */}
           <div className="facility-account">
             <div className="facility-account-header">
-              <span>Fintech Platform | Digital Revolving Loan</span>
+              <span>MTN Momo Loan | Digital Revolving Loan</span>
               <span className="status-pill success">Performing</span>
             </div>
 
@@ -1084,7 +1084,7 @@ export default function CreditReport() {
                 </tr>
                 <tr>
                   <td><strong>18 Apr 2026 | 9:15 AM</strong></td>
-                  <td>Fintech Microfinance</td>
+                  <td>MTN Momo Loan</td>
                   <td>Revolving Digital Credit Line</td>
                   <td>GHS 10,000</td>
                 </tr>
