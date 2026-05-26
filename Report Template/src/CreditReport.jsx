@@ -603,24 +603,58 @@ export default function CreditReport() {
               <span>Universal Bank | Personal Loan — Unsecured</span>
               <span className="status-pill success">Performing</span>
             </div>
-            <div className="facility-detail-layout">
-              <div className="detail-column">
-                <div className="detail-row"><span>Approved Amount</span><strong>GHS 80,000</strong></div>
-                <div className="detail-row"><span>Outstanding Balance</span><strong>GHS 42,000</strong></div>
-                <div className="detail-row"><span>Last Payment Status</span><strong>On Time</strong></div>
-                <div className="detail-row"><span>Current Arrears DPD</span><strong>0 DPD</strong></div>
-                <div className="detail-row"><span>Interest Profile</span><strong>Standard</strong></div>
-                <div className="detail-row"><span>Refinance Opportunity</span><strong>MEDIUM</strong></div>
+            
+            <div className="facility-details-horizontal">
+              <div className="metric-box">
+                <span>Approved Amount</span>
+                <strong>GHS 80,000</strong>
               </div>
-              <div>
-                <p className="legend" style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>24-Month Payment Grid</p>
-                <div className="behaviour-grid-24">
-                  {historyAccount1.map((status, index) => (
-                    <div key={index} className={getCellClass(status)} title={`Month ${index + 1}`}>
-                      {getCellLabel(status)}
-                    </div>
-                  ))}
+              <div className="metric-box">
+                <span>Outstanding Balance</span>
+                <strong>GHS 42,000</strong>
+              </div>
+              <div className="metric-box">
+                <span>Last Payment Status</span>
+                <strong>On Time</strong>
+              </div>
+              <div className="metric-box">
+                <span>Current Arrears DPD</span>
+                <strong>0 DPD</strong>
+              </div>
+              <div className="metric-box">
+                <span>Interest Profile</span>
+                <strong>Standard</strong>
+              </div>
+              <div className="metric-box">
+                <span>Refinance Opportunity</span>
+                <strong>MEDIUM</strong>
+              </div>
+            </div>
+
+            <div className="facility-payment-history">
+              <div className="payment-history-header">
+                <span className="payment-title">24-Month Repayment History</span>
+                <div className="payment-legend">
+                  <div className="legend-item">
+                    <span className="legend-cell ontime">✔</span>
+                    <span>On-Time</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-cell late">30</span>
+                    <span>Late (1-30 DPD)</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-cell missed">60+</span>
+                    <span>Missed (30+ DPD)</span>
+                  </div>
                 </div>
+              </div>
+              <div className="behaviour-grid-24">
+                {historyAccount1.map((status, index) => (
+                  <div key={index} className={getCellClass(status)} title={`Month ${index + 1}`}>
+                    {getCellLabel(status)}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -631,24 +665,58 @@ export default function CreditReport() {
               <span>Fintech Platform | Digital Revolving Loan</span>
               <span className="status-pill success">Performing</span>
             </div>
-            <div className="facility-detail-layout">
-              <div className="detail-column">
-                <div className="detail-row"><span>Approved Amount</span><strong>GHS 10,000</strong></div>
-                <div className="detail-row"><span>Outstanding Balance</span><strong>GHS 4,500</strong></div>
-                <div className="detail-row"><span>Last Payment Status</span><strong>On Time</strong></div>
-                <div className="detail-row"><span>Current Arrears DPD</span><strong>0 DPD</strong></div>
-                <div className="detail-row"><span>Interest Profile</span><strong>High</strong></div>
-                <div className="detail-row"><span>Refinance Opportunity</span><strong>LOW</strong></div>
+            
+            <div className="facility-details-horizontal">
+              <div className="metric-box">
+                <span>Approved Amount</span>
+                <strong>GHS 10,000</strong>
               </div>
-              <div>
-                <p className="legend" style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>24-Month Payment Grid</p>
-                <div className="behaviour-grid-24">
-                  {historyAccount2.map((status, index) => (
-                    <div key={index} className={getCellClass(status)} title={`Month ${index + 1}: ${status === 'L' ? '30 Days Late' : 'On-Time'}`}>
-                      {getCellLabel(status)}
-                    </div>
-                  ))}
+              <div className="metric-box">
+                <span>Outstanding Balance</span>
+                <strong>GHS 4,500</strong>
+              </div>
+              <div className="metric-box">
+                <span>Last Payment Status</span>
+                <strong>On Time</strong>
+              </div>
+              <div className="metric-box">
+                <span>Current Arrears DPD</span>
+                <strong>0 DPD</strong>
+              </div>
+              <div className="metric-box">
+                <span>Interest Profile</span>
+                <strong>High</strong>
+              </div>
+              <div className="metric-box">
+                <span>Refinance Opportunity</span>
+                <strong>LOW</strong>
+              </div>
+            </div>
+
+            <div className="facility-payment-history">
+              <div className="payment-history-header">
+                <span className="payment-title">24-Month Repayment History</span>
+                <div className="payment-legend">
+                  <div className="legend-item">
+                    <span className="legend-cell ontime">✔</span>
+                    <span>On-Time</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-cell late">30</span>
+                    <span>Late (1-30 DPD)</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-cell missed">60+</span>
+                    <span>Missed (30+ DPD)</span>
+                  </div>
                 </div>
+              </div>
+              <div className="behaviour-grid-24">
+                {historyAccount2.map((status, index) => (
+                  <div key={index} className={getCellClass(status)} title={`Month ${index + 1}: ${status === 'L' ? '30 Days Late' : 'On-Time'}`}>
+                    {getCellLabel(status)}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -659,24 +727,58 @@ export default function CreditReport() {
               <span>Savings & Loans Institution | SME Business-linked Loan</span>
               <span className="status-pill success">Performing</span>
             </div>
-            <div className="facility-detail-layout">
-              <div className="detail-column">
-                <div className="detail-row"><span>Approved Amount</span><strong>GHS 160,000</strong></div>
-                <div className="detail-row"><span>Outstanding Balance</span><strong>GHS 71,500</strong></div>
-                <div className="detail-row"><span>Last Payment Status</span><strong>On Time</strong></div>
-                <div className="detail-row"><span>Current Arrears DPD</span><strong>0 DPD</strong></div>
-                <div className="detail-row"><span>Interest Profile</span><strong>High</strong></div>
-                <div className="detail-row"><span>Refinance Opportunity</span><strong>HIGH</strong></div>
+            
+            <div className="facility-details-horizontal">
+              <div className="metric-box">
+                <span>Approved Amount</span>
+                <strong>GHS 160,000</strong>
               </div>
-              <div>
-                <p className="legend" style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>24-Month Payment Grid</p>
-                <div className="behaviour-grid-24">
-                  {historyAccount3.map((status, index) => (
-                    <div key={index} className={getCellClass(status)} title={`Month ${index + 1}`}>
-                      {getCellLabel(status)}
-                    </div>
-                  ))}
+              <div className="metric-box">
+                <span>Outstanding Balance</span>
+                <strong>GHS 71,500</strong>
+              </div>
+              <div className="metric-box">
+                <span>Last Payment Status</span>
+                <strong>On Time</strong>
+              </div>
+              <div className="metric-box">
+                <span>Current Arrears DPD</span>
+                <strong>0 DPD</strong>
+              </div>
+              <div className="metric-box">
+                <span>Interest Profile</span>
+                <strong>High</strong>
+              </div>
+              <div className="metric-box">
+                <span>Refinance Opportunity</span>
+                <strong>HIGH</strong>
+              </div>
+            </div>
+
+            <div className="facility-payment-history">
+              <div className="payment-history-header">
+                <span className="payment-title">24-Month Repayment History</span>
+                <div className="payment-legend">
+                  <div className="legend-item">
+                    <span className="legend-cell ontime">✔</span>
+                    <span>On-Time</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-cell late">30</span>
+                    <span>Late (1-30 DPD)</span>
+                  </div>
+                  <div className="legend-item">
+                    <span className="legend-cell missed">60+</span>
+                    <span>Missed (30+ DPD)</span>
+                  </div>
                 </div>
+              </div>
+              <div className="behaviour-grid-24">
+                {historyAccount3.map((status, index) => (
+                  <div key={index} className={getCellClass(status)} title={`Month ${index + 1}`}>
+                    {getCellLabel(status)}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -937,7 +1039,7 @@ export default function CreditReport() {
         <section id="enquiries" className="report-section section-card">
           <div className="section-title">
             SECTION 6C — BUREAU ENQUIRY HISTORY
-            <span className="section-subtitle-tag">90-Day Inquiry Trail</span>
+            <span className="section-subtitle-tag">12-Month Inquiry Trail</span>
           </div>
 
           <div className="table-responsive">
