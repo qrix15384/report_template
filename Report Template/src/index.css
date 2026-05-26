@@ -904,20 +904,38 @@ body {
 .behaviour-grid-24 {
   display: grid;
   grid-template-columns: repeat(24, 1fr);
-  gap: 4px;
+  gap: 6px;
   width: 100%;
   overflow-x: auto;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
 }
 
 .behaviour-cell {
   background: #ffffff;
   border: 1px solid var(--gray-300);
   border-radius: 6px;
-  padding: 8px 4px;
+  padding: 10px 4px;
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: bold;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  min-height: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.behaviour-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  border-width: 2px;
 }
 
 .behaviour-cell.ontime {
@@ -926,10 +944,21 @@ body {
   border-color: var(--green-300);
 }
 
+.behaviour-cell.ontime:hover {
+  background: var(--green-300);
+  border-color: var(--green-500);
+}
+
 .behaviour-cell.late {
   background: #fdf5e6;
   color: #8b6508;
   border-color: #f5deb3;
+}
+
+.behaviour-cell.late:hover {
+  background: #ffb900;
+  color: #6a5100;
+  border-color: #f5a623;
 }
 
 .behaviour-cell.missed {
@@ -938,10 +967,167 @@ body {
   border-color: #fbc4c4;
 }
 
+.behaviour-cell.missed:hover {
+  background: #e85d5d;
+  color: #ffffff;
+  border-color: #b22222;
+}
+
 .behaviour-cell.nodata {
   background: var(--gray-100);
   color: var(--gray-500);
   border-color: var(--gray-200);
+}
+
+.behaviour-cell.nodata:hover {
+  background: var(--gray-200);
+  border-color: var(--gray-400);
+}
+
+/* 24-Month Grid Cell Labels */
+.cell-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.cell-month {
+  display: block;
+  font-size: 0.55rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: normal;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.behaviour-cell.ontime .cell-month {
+  color: var(--green-700);
+}
+
+.behaviour-cell.late .cell-month {
+  color: #8b6508;
+}
+
+.behaviour-cell.missed .cell-month {
+  color: #b22222;
+}
+
+/* Enhanced Payment History Section */
+.facility-payment-history {
+  margin-top: 16px;
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.payment-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.payment-title {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--green-900);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.payment-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--gray-700);
+}
+
+.legend-cell {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.legend-cell.ontime {
+  background: var(--green-100);
+  color: var(--green-800);
+  border: 1px solid var(--green-300);
+}
+
+.legend-cell.late {
+  background: #fdf5e6;
+  color: #8b6508;
+  border: 1px solid #f5deb3;
+}
+
+.legend-cell.missed {
+  background: #fdf0f0;
+  color: #b22222;
+  border: 1px solid #fbc4c4;
+}
+
+/* 24-Month Grid with Quarter Dividers */
+.behaviour-grid-24-wrapper {
+  position: relative;
+}
+
+.behaviour-grid-24 {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+/* Visual separators for quarters (every 6 months) */
+.behaviour-grid-24 .behaviour-cell:nth-child(6n)::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: var(--gray-300);
+  right: -3px;
+  top: 0;
+}
+
+/* Month group labels */
+.grid-month-header {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 6px;
+  width: 100%;
+  padding: 0 12px 8px 12px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  text-align: center;
+}
+
+.grid-month-label {
+  padding: 2px 0;
 }
 
 /* AI Engine Dashboard Grid */
@@ -1316,7 +1502,21 @@ body {
     border: 1px solid #fbc4c4;
   }
 
-  grid-template-columns: 1fr;
+  /* 24-Month Grid Responsive Design */
+  .behaviour-grid-24 {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 6px;
+  }
+
+  .behaviour-cell {
+    min-height: 40px;
+    padding: 8px 2px;
+  }
+
+  .cell-month {
+    font-size: 0.5rem;
+  }
 }
 }
 

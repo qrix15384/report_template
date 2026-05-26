@@ -660,8 +660,9 @@ export default function CreditReport() {
               </div>
               <div className="behaviour-grid-24">
                 {historyAccount1.map((status, index) => (
-                  <div key={index} className={getCellClass(status)} title={`Month ${index + 1}`}>
-                    {getCellLabel(status)}
+                  <div key={index} className={getCellClass(status)} title={`${getMonthYear(index)}: ${status === 'C' ? 'On-Time' : status === 'L' ? 'Late (1-30 DPD)' : status === 'M' ? 'Missed (30+ DPD)' : 'No Data'}`}>
+                    <div className="cell-label">{getCellLabel(status)}</div>
+                    <div className="cell-month">{getMonthYear(index)}</div>
                   </div>
                 ))}
               </div>
@@ -785,8 +786,9 @@ export default function CreditReport() {
               </div>
               <div className="behaviour-grid-24">
                 {historyAccount3.map((status, index) => (
-                  <div key={index} className={getCellClass(status)} title={`Month ${index + 1}`}>
-                    {getCellLabel(status)}
+                  <div key={index} className={getCellClass(status)} title={`${getMonthYear(index)}: ${status === 'C' ? 'On-Time' : status === 'L' ? 'Late (1-30 DPD)' : status === 'M' ? 'Missed (30+ DPD)' : 'No Data'}`}>
+                    <div className="cell-label">{getCellLabel(status)}</div>
+                    <div className="cell-month">{getMonthYear(index)}</div>
                   </div>
                 ))}
               </div>
