@@ -3,7 +3,7 @@ import logo from './assets/xdsdata-logo.png'
 
 const facilityRows = [
   {
-    lender: 'Universal Bank',
+    lender: 'Absa Bank Ghana',
     type: 'Personal Loan',
     approved: 'GHS 80,000',
     outstanding: 'GHS 42,000',
@@ -609,7 +609,7 @@ export default function CreditReport() {
           {/* Account Detail 1 */}
           <div className="facility-account">
             <div className="facility-account-header">
-              <span>Universal Bank | Personal Loan — Unsecured</span>
+              <span>Absa Bank Ghana | Personal Loan — Unsecured</span>
               <span className="status-pill success">Performing</span>
             </div>
 
@@ -617,6 +617,11 @@ export default function CreditReport() {
               <div className="metric-box">
                 <span>Approved Amount</span>
                 <strong>GHS 80,000</strong>
+              </div>
+              
+              <div className="metric-box">
+                <span>Lender Name</span>
+                <strong>Absa Bank Ghana</strong>
               </div>
               <div className="metric-box">
                 <span>Outstanding Balance</span>
