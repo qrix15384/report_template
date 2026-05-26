@@ -78,6 +78,15 @@ export default function CreditReport() {
     { name: 'Apr', status: 'ontime' }
   ];
 
+  // Helper for month-year labels
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const getMonthYear = (index) => {
+    const startYear = 2021; // base year for month 0 -> Jan 2021
+    const month = index % 12;
+    const year = startYear + Math.floor(index / 12);
+    return `${monthNames[month]} ${year}`;
+  };
+
   return (
     <div className="app-container">
       {/* Sidebar Navigation Panel */}
@@ -173,13 +182,13 @@ export default function CreditReport() {
             <div className="gauge-card">
               <svg className="score-gauge-svg" viewBox="0 0 120 120">
                 <circle className="gauge-bg" cx="60" cy="60" r="50" />
-                <circle 
-                  className="gauge-fill" 
-                  cx="60" 
-                  cy="60" 
-                  r="50" 
-                  strokeDasharray="314.16" 
-                  strokeDashoffset={314.16 * (1 - 742 / 900)} 
+                <circle
+                  className="gauge-fill"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  strokeDasharray="314.16"
+                  strokeDashoffset={314.16 * (1 - 742 / 900)}
                 />
                 <text className="gauge-text" x="60" y="58">
                   <tspan className="gauge-score" x="60" dy="0">742</tspan>
@@ -279,7 +288,7 @@ export default function CreditReport() {
                 <span>Identity Confidence</span>
                 <span className="verified-badge">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                   </svg>
                   VERIFIED (100%)
                 </span>
@@ -603,7 +612,7 @@ export default function CreditReport() {
               <span>Universal Bank | Personal Loan — Unsecured</span>
               <span className="status-pill success">Performing</span>
             </div>
-            
+
             <div className="facility-details-horizontal">
               <div className="metric-box">
                 <span>Approved Amount</span>
@@ -665,7 +674,7 @@ export default function CreditReport() {
               <span>Fintech Platform | Digital Revolving Loan</span>
               <span className="status-pill success">Performing</span>
             </div>
-            
+
             <div className="facility-details-horizontal">
               <div className="metric-box">
                 <span>Approved Amount</span>
@@ -713,8 +722,9 @@ export default function CreditReport() {
               </div>
               <div className="behaviour-grid-24">
                 {historyAccount2.map((status, index) => (
-                  <div key={index} className={getCellClass(status)} title={`Month ${index + 1}: ${status === 'L' ? '30 Days Late' : 'On-Time'}`}>
-                    {getCellLabel(status)}
+                  <div key={index} className={getCellClass(status)} title={`Month ${index + 1}: ${status === 'L' ? '30 Days Late' : 'On-Time'}: ${getMonthYear(index)}`}>
+                    <div className="cell-label">{getCellLabel(status)}</div>
+                    <div className="cell-month">{getMonthYear(index)}</div>
                   </div>
                 ))}
               </div>
@@ -727,7 +737,7 @@ export default function CreditReport() {
               <span>Savings & Loans Institution | SME Business-linked Loan</span>
               <span className="status-pill success">Performing</span>
             </div>
-            
+
             <div className="facility-details-horizontal">
               <div className="metric-box">
                 <span>Approved Amount</span>
