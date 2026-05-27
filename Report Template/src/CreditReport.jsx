@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import logo from './assets/xdsdata-logo.png'
 
 const facilityRows = [
@@ -44,6 +44,47 @@ historyAccount3[18] = 'M';  // One missed payment in month 19
 historyAccount3[19] = 'L';  // Delayed catchup
 
 export default function CreditReport() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar when a nav link is clicked
+  const handleNavClick = () => {
+    setSidebarOpen(false);
+  };
+
+  // Manage body class and click outside handling
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.add('sidebar-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('sidebar-open');
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.body.classList.remove('sidebar-open');
+      document.body.style.overflow = 'auto';
+    };
+  }, [sidebarOpen]);
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (window.innerWidth <= 1150) {
+        const sidebar = document.querySelector('.sidebar');
+        const hamburger = document.querySelector('.hamburger-btn');
+        if (sidebar && hamburger && !sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+          setSidebarOpen(false);
+        }
+      }
+    };
+
+    if (sidebarOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [sidebarOpen]);
+
   // Helper to render repayment cell classes
   const getCellClass = (status) => {
     switch (status) {
@@ -89,8 +130,33 @@ export default function CreditReport() {
 
   return (
     <div className="app-container">
+      {/* Hamburger Menu Button (Mobile) */}
+      <button 
+        className="hamburger-btn"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+        style={{
+          display: 'none',
+          position: 'fixed',
+          top: '12px',
+          left: '12px',
+          zIndex: 999,
+          background: 'var(--green-950)',
+          color: '#ffffff',
+          border: 'none',
+          width: '44px',
+          height: '44px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '1.2rem',
+          padding: '8px',
+        }}
+      >
+        ☰
+      </button>
+
       {/* Sidebar Navigation Panel */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
           <img src={logo} alt="xdsdata logo" className="sidebar-logo" />
           <div className="sidebar-brand-name">
@@ -100,37 +166,37 @@ export default function CreditReport() {
         </div>
 
         <nav className="sidebar-nav">
-          <a href="#summary" className="nav-item">
+          <a href="#summary" className="nav-item" onClick={handleNavClick}>
             <span>📊</span> Executive Summary
           </a>
-          <a href="#identity" className="nav-item">
+          <a href="#identity" className="nav-item" onClick={handleNavClick}>
             <span>👤</span> Borrower Identity
           </a>
-          <a href="#demographics" className="nav-item">
+          <a href="#demographics" className="nav-item" onClick={handleNavClick}>
             <span>👥</span> Demographic History
           </a>
-          <a href="#history" className="nav-item">
+          <a href="#history" className="nav-item" onClick={handleNavClick}>
             <span>📅</span> Payment History
           </a>
-          <a href="#facilities" className="nav-item">
+          <a href="#facilities" className="nav-item" onClick={handleNavClick}>
             <span>💳</span> Active Facilities
           </a>
-          <a href="#joint-loans" className="nav-item">
+          <a href="#joint-loans" className="nav-item" onClick={handleNavClick}>
             <span>🤝</span> Joint Loans
           </a>
-          <a href="#affordability" className="nav-item">
+          <a href="#affordability" className="nav-item" onClick={handleNavClick}>
             <span>💰</span> Cashflow & Affordability
           </a>
-          <a href="#risk-compliance" className="nav-item">
+          <a href="#risk-compliance" className="nav-item" onClick={handleNavClick}>
             <span>🛡️</span> Risk & Compliance
           </a>
-          <a href="#cheques-judgements" className="nav-item">
+          <a href="#cheques-judgements" className="nav-item" onClick={handleNavClick}>
             <span>🚫</span> Dud Cheques & Judgements
           </a>
-          <a href="#enquiries" className="nav-item">
+          <a href="#enquiries" className="nav-item" onClick={handleNavClick}>
             <span>🔍</span> Enquiry History
           </a>
-          <a href="#ai-insights" className="nav-item">
+          <a href="#ai-insights" className="nav-item" onClick={handleNavClick}>
             <span>⚡</span> AI Insights & Decisions
           </a>
         </nav>
