@@ -160,8 +160,8 @@ export default function CreditReport() {
         <div className="sidebar-brand">
           <img src={logo} alt="xdsdata logo" className="sidebar-logo" />
           <div className="sidebar-brand-name">
-            XDS Data
-            <span className="sidebar-brand-sub">Ghana Ltd.</span>
+            XDS Data Ghana Limited.
+            <span className="sidebar-brand-sub">Lisence No. 001</span>
           </div>
         </div>
 
