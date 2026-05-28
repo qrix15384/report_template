@@ -160,7 +160,7 @@ export default function CreditReport() {
         <div className="sidebar-brand">
           <img src={logo} alt="xdsdata logo" className="sidebar-logo" />
           <div className="sidebar-brand-name">
-            XDS Data Ghana Limited.
+            XDS Data Ghana Limited
             <span className="sidebar-brand-sub">Lisence No. 001</span>
           </div>
         </div>
@@ -217,15 +217,43 @@ export default function CreditReport() {
 
       {/* Main Report Dashboard Content */}
       <main className="main-content">
+        {/* Report Overview Banner Section */}
+        <section 
+          style={{
+            background: 'var(--green-950)',
+            color: '#ffffff',
+            padding: '30px 24px',
+            borderRadius: '12px',
+            marginBottom: '24px',
+            textAlign: 'right'
+          }}
+        >
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '1.0rem', fontWeight: '10' }}>
+            XDS Data Ghana Limited
+            <br />Suite A 701, The Octagon, Accra<br></br>
+            Tel: +233 (0)30 123 4567 | Email: ask@xdsdata.com<br></br>
+            <a href="https://www.xdsdata.com" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff', textDecoration: 'underline' }}>
+              https://www.xdsdata.com
+            </a>
+            <br></br>
+            License No. 001
+          </h1>
+          
+        <div className="header-badge" style={{}}>Smart Detailed Credit Report</div>
+
+          
+
+        </section>
+
         {/* Top Report Header Metadata bar */}
         <header className="report-header">
           <div className="header-meta">
             <div className="meta-item">
-              <span className="meta-label">Report ID</span>
-              <span className="meta-value">CR-2026-000123</span>
+              <span className="meta-label">XDS Reference</span>
+              <span className="meta-value">123456</span>
             </div>
             <div className="meta-item">
-              <span className="meta-label">Date Issued</span>
+              <span className="meta-label">Date | Time Issued</span>
               <span className="meta-value">17 May 2026 | 3:46 PM</span>
             </div>
             <div className="meta-item">
@@ -233,7 +261,7 @@ export default function CreditReport() {
               <span className="meta-value">ABC Rural Bank Ltd.</span>
             </div>
           </div>
-          <div className="header-badge">CONFIDENTIAL CREDIT ASSESSMENT</div>
+          <div className="header-badge">Smart Detailed Credit Report</div>
         </header>
 
         {/* Section 1: Executive Summary & Dashboard */}
