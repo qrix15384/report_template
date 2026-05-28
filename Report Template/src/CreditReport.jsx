@@ -158,11 +158,7 @@ export default function CreditReport() {
       {/* Sidebar Navigation Panel */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <img src={logo} alt="xdsdata logo" className="sidebar-logo" />
-          <div className="sidebar-brand-name">
-            XDS Data Ghana Limited
-            <span className="sidebar-brand-sub">Lisence No. 001</span>
-          </div>
+         <img src={logo} alt="xdsdata logo" className="sidebar-logo" />
         </div>
 
         <nav className="sidebar-nav">
@@ -203,10 +199,8 @@ export default function CreditReport() {
 
         <div className="sidebar-footer">
           <div className="sidebar-user">
-            <div className="user-avatar">AA</div>
+            
             <div className="user-info">
-              <span className="user-name">Abena Amponsah</span>
-              <span className="user-role">RM Officer</span>
             </div>
           </div>
           <button className="btn-print" onClick={() => window.print()}>
@@ -220,27 +214,30 @@ export default function CreditReport() {
         {/* Report Overview Banner Section */}
         <section 
           style={{
-            background: 'var(--green-700)',
+            background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)',
             color: '#ffffff',
             padding: '30px 24px',
             borderRadius: '12px',
             marginBottom: '24px',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'space-between',
             gap: '30px'
           }}
         >
-          <img 
-            src={logo} 
-            alt="XDS Data Ghana Limited logo" 
-            style={{
-              width: '400px',
-              height: 'auto',
-              flexShrink: 0,
-              backgroundColor: 'transparent'
-            }} 
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+            <img 
+              src={logo} 
+              alt="XDS Data Ghana Limited logo" 
+              style={{
+                width: '280px',
+                height: 'auto',
+                flexShrink: 0,
+                backgroundColor: 'transparent'
+              }} 
+            />
+            <div className="header-badge" style={{margin: '0'}}>Smart Detailed Credit Report</div>
+          </div>
           
           <div style={{ textAlign: 'right' }}>
             <h1 style={{ margin: '0 0 8px 0', fontSize: '1.0rem', fontWeight: '700' }}>
@@ -253,8 +250,6 @@ export default function CreditReport() {
               <br></br>
               License No. 001
             </h1>
-            
-            <div className="header-badge" style={{margin: '30px 0'}}>Smart Detailed Credit Report</div>
           </div>
         </section>
 
