@@ -257,13 +257,16 @@ body {
 
 .header-badge {
   background: var(--green-100);
-  color: var(--green-800);
+  color: var(--green-700);
   border: 1px solid var(--green-300);
   padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  border-radius: 14px;
+  font-size: 1.5rem;
   font-weight: bold;
   letter-spacing: 0.05em;
+  display: inline-block;
+  white-space: nowrap;
+  width: fit-content;
 }
 
 /* Section Wrapper and Panels */

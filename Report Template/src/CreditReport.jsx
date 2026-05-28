@@ -220,7 +220,7 @@ export default function CreditReport() {
         {/* Report Overview Banner Section */}
         <section 
           style={{
-            background: 'var(--green-950)',
+            background: 'var(--green-700)',
             color: '#ffffff',
             padding: '30px 24px',
             borderRadius: '12px',
@@ -239,10 +239,7 @@ export default function CreditReport() {
             License No. 001
           </h1>
           
-        <div className="header-badge" style={{margin: '16px 0'}}>Smart Detailed Credit Report</div>
-
-          
-
+        <div className="header-badge" style={{margin: '30px 0'}}>Smart Detailed Credit Report</div>
         </section>
 
         {/* Top Report Header Metadata bar */}
@@ -261,7 +258,7 @@ export default function CreditReport() {
               <span className="meta-value">ABC Rural Bank Ltd.</span>
             </div>
           </div>
-          <div className="header-badge">Smart Detailed Credit Report</div>
+          
         </header>
 
         {/* Section 1: Executive Summary & Dashboard */}
