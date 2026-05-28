@@ -730,31 +730,31 @@ export default function CreditReport() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', padding: '0' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Approved Amount</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Approved Amount</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 80,000</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Lender Name</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Lender Name</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>Absa Bank Ghana</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Outstanding Balance</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Outstanding Balance</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 42,000</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Last Payment Status</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Payment Status</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>On Time</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Current Arrears DPD</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Current Arrears DPD</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>0 DPD</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Interest Profile</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>Standard</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Refinance Opportunity</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>MEDIUM</div>
               </div>
             </div>
@@ -797,27 +797,27 @@ export default function CreditReport() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', padding: '0' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Approved Amount</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Approved Amount</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 10,000</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Outstanding Balance</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Outstanding Balance</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 4,500</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Last Payment Status</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Payment Status</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>On Time</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Current Arrears DPD</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Current Arrears DPD</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>0 DPD</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Interest Profile</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>High</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Refinance Opportunity</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>LOW</div>
               </div>
             </div>
@@ -860,27 +860,27 @@ export default function CreditReport() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', padding: '0' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Approved Amount</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Approved Amount</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 160,000</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Outstanding Balance</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Outstanding Balance</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 71,500</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Last Payment Status</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Payment Status</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>On Time</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Current Arrears DPD</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Current Arrears DPD</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>0 DPD</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Interest Profile</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>High</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '600' }}>Refinance Opportunity</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>HIGH</div>
               </div>
             </div>
