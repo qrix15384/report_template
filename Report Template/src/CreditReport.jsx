@@ -225,21 +225,37 @@ export default function CreditReport() {
             padding: '30px 24px',
             borderRadius: '12px',
             marginBottom: '24px',
-            textAlign: 'right'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '30px'
           }}
         >
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '1.0rem', fontWeight: '10' }}>
-            XDS Data Ghana Limited
-            <br />Suite A 701, The Octagon, Accra<br></br>
-            Tel: +233 (0)30 123 4567 | Email: ask@xdsdata.com<br></br>
-            <a href="https://www.xdsdata.com" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff', textDecoration: 'underline' }}>
-              https://www.xdsdata.com
-            </a>
-            <br></br>
-            License No. 001
-          </h1>
+          <img 
+            src={logo} 
+            alt="XDS Data Ghana Limited logo" 
+            style={{
+              width: '400px',
+              height: 'auto',
+              flexShrink: 0,
+              backgroundColor: 'transparent'
+            }} 
+          />
           
-        <div className="header-badge" style={{margin: '30px 0'}}>Smart Detailed Credit Report</div>
+          <div style={{ textAlign: 'right' }}>
+            <h1 style={{ margin: '0 0 8px 0', fontSize: '1.0rem', fontWeight: '700' }}>
+              XDS Data Ghana Limited
+              <br />Suite A 701, The Octagon, Accra<br></br>
+              Tel: +233 (0)30 123 4567 | Email: ask@xdsdata.com<br></br>
+              <a href="https://www.xdsdata.com" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff', textDecoration: 'underline' }}>
+                https://www.xdsdata.com
+              </a>
+              <br></br>
+              License No. 001
+            </h1>
+            
+            <div className="header-badge" style={{margin: '30px 0'}}>Smart Detailed Credit Report</div>
+          </div>
         </section>
 
         {/* Top Report Header Metadata bar */}
@@ -257,6 +273,19 @@ export default function CreditReport() {
               <span className="meta-label">Requesting Bank</span>
               <span className="meta-value">ABC Rural Bank Ltd.</span>
             </div>
+            <div className="meta-item">
+              <span className="meta-label">User</span>
+              <span className="meta-value">Abena Amponsah</span>
+            </div>
+            <div className="meta-item">
+              <span className="meta-label">Title</span>
+              <span className="meta-value">Regional Manager</span>
+            </div>
+            <div className="meta-item">
+              <span className="meta-label">Branch</span>
+              <span className="meta-value">Asante Bekwai</span>
+            </div>
+            
           </div>
           
         </header>
