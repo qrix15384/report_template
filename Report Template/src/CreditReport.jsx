@@ -239,7 +239,7 @@ export default function CreditReport() {
             License No. 001
           </h1>
           
-        <div className="header-badge" style={{}}>Smart Detailed Credit Report</div>
+        <div className="header-badge" style={{margin: '16px 0'}}>Smart Detailed Credit Report</div>
 
           
 
@@ -302,7 +302,7 @@ export default function CreditReport() {
               </div>
 
               <div className="dashboard-panel">
-                <span className="panel-caption">Prob. of Default</span>
+                <span className="panel-caption">Probability of Default</span>
                 <h2>3.8%</h2>
                 <p className="panel-note">12-month forecast</p>
                 <p className="small-note">Stress Forecast: Stable</p>
