@@ -434,7 +434,7 @@ export default function CreditReport() {
                   </thead>
                   <tbody>
                     <tr>
-                      <td><strong>Kwame Mensah</strong></td>
+                      <td>Kwame Mensah</td>
                       <td>Current Legal Name</td>
                       <td>17 May 2026</td>
                     </tr>
@@ -455,25 +455,25 @@ export default function CreditReport() {
                 <table className="report-table">
                   <thead>
                     <tr>
-                      <th>ID Number (Main Subject)</th>
+                      <th>ID Number</th>
                       <th>Type</th>
                       <th>Last Update</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td><strong>GHA-721098421-3</strong></td>
+                      <td>GHA-721098421-3</td>
                       <td>Ghana Card (National ID)</td>
                       <td>14 Feb 2022</td>
                     </tr>
                     <tr>
-                      <td>GHA-551201948-2</td>
-                      <td>Ghana Card (Expired)</td>
+                      <td>H123456789</td>
+                      <td>Passport ID (Expired)</td>
                       <td>10 Jan 2018</td>
                     </tr>
                     <tr>
                       <td>DL-092813-A</td>
-                      <td>Accra Drivers License</td>
+                      <td>Drivers License</td>
                       <td>05 Aug 2021</td>
                     </tr>
                   </tbody>
@@ -488,14 +488,14 @@ export default function CreditReport() {
                 <table className="report-table">
                   <thead>
                     <tr>
-                      <th>Telephone (Main Subject)</th>
+                      <th>Telephone</th>
                       <th>Type</th>
                       <th>Last Update</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td><strong>+233 24 412 3456</strong></td>
+                      <td>+233 24 412 3456</td>
                       <td>Primary Mobile</td>
                       <td>17 May 2026</td>
                     </tr>
@@ -521,14 +521,14 @@ export default function CreditReport() {
                 <table className="report-table">
                   <thead>
                     <tr>
-                      <th>Address (Main Subject)</th>
+                      <th>Address</th>
                       <th>Type</th>
                       <th>Last Update</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td><strong>H/No 45, Ablekuma, Accra</strong></td>
+                      <td>H/No 45, Ablekuma, Accra</td>
                       <td>Primary Residential</td>
                       <td>17 May 2026</td>
                     </tr>
@@ -724,7 +724,7 @@ export default function CreditReport() {
           {/* Account Detail 1 */}
           <div className="facility-account">
             <div className="facility-account-header">
-              <span>Absa Bank Ghana | Personal Loan — Unsecured</span>
+              <span>Absa Bank Ghana | Personal Loan — Unsecured | 90981737382</span>
               <span className="status-pill success">Performing</span>
             </div>
 
@@ -734,16 +734,12 @@ export default function CreditReport() {
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 80,000</div>
               </div>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Lender Name</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>Absa Bank Ghana</div>
-              </div>
-              <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Outstanding Balance</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 42,000</div>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Payment Status</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>On Time</div>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>ON TIME</div>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Current Arrears DPD</span>
@@ -751,11 +747,27 @@ export default function CreditReport() {
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>Standard</div>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>STANDARD</div>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>MEDIUM</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Date Disbursed</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2022</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Installment Amount</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 1,200</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Loan Expirey Date</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2025</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Date of Update</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2023</div>
               </div>
             </div>
 
@@ -791,7 +803,7 @@ export default function CreditReport() {
           {/* Account Detail 2 */}
           <div className="facility-account">
             <div className="facility-account-header">
-              <span>MTN Momo Loan | Digital Revolving Loan</span>
+              <span>MTN Momo Loan | Digital Revolving Loan | 876543 </span>
               <span className="status-pill success">Performing</span>
             </div>
 
@@ -814,11 +826,27 @@ export default function CreditReport() {
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>High</div>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>HIGH</div>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>LOW</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Date Disbursed</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2022</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Installment Amount</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 1,200</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Loan Expirey Date</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2025</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Date of Update</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2023</div>
               </div>
             </div>
 
@@ -854,7 +882,7 @@ export default function CreditReport() {
           {/* Account Detail 3 */}
           <div className="facility-account">
             <div className="facility-account-header">
-              <span>Savings & Loans Institution | SME Business-linked Loan</span>
+              <span>Bayport Savings and Loans | SME Business-linked Loan | LG7787YY5435</span>
               <span className="status-pill success">Performing</span>
             </div>
 
@@ -869,7 +897,7 @@ export default function CreditReport() {
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Payment Status</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>On Time</div>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>ON TIME</div>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Current Arrears DPD</span>
@@ -877,11 +905,27 @@ export default function CreditReport() {
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>High</div>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>HIGH</div>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
                 <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>HIGH</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Date Disbursed</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2022</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Installment Amount</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 1,200</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Loan Expirey Date</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2025</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Date of Update</span>
+                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2023</div>
               </div>
             </div>
 
