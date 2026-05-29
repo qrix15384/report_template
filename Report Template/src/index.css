@@ -552,6 +552,7 @@ body {
   scroll-behavior: smooth;
   overscroll-behavior: contain;
   border-radius: 8px;
+  
 }
 
 .report-table {
@@ -595,6 +596,7 @@ body {
   background: var(--gray-100);
   border-bottom: 2px solid var(--gray-300);
   color: var(--gray-950);
+  
 }
 
 /* Status Pill Indicators */

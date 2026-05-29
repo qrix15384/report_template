@@ -4,6 +4,8 @@ import logo from './assets/xdsdata-logo.png'
 const facilityRows = [
   {
     lender: 'Absa Bank Ghana',
+    id: 'facility-absa',
+    number: <center>1</center>,
     type: 'Personal Loan',
     approved: 'GHS 80,000',
     outstanding: 'GHS 42,000',
@@ -13,6 +15,8 @@ const facilityRows = [
   },
   {
     lender: 'MTN Momo Loan',
+    id: 'facility-mtn',
+    number: <center>1</center>,
     type: 'Digital Loan',
     approved: 'GHS 10,000',
     outstanding: 'GHS 4,500',
@@ -21,7 +25,9 @@ const facilityRows = [
     refi: 'Low',
   },
   {
-    lender: 'Savings & Loans Inst.',
+    lender: 'Bayport Savings & Loans',
+    id: 'facility-bayport',
+    number: <center>1</center>,
     type: 'SME-linked Loan',
     approved: 'GHS 160,000',
     outstanding: 'GHS 71,500',
@@ -84,6 +90,14 @@ export default function CreditReport() {
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [sidebarOpen]);
+
+  // Handle scrolling to facility account
+  const scrollToFacility = (facilityId) => {
+    const element = document.getElementById(facilityId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Helper to render repayment cell classes
   const getCellClass = (status) => {
@@ -374,22 +388,30 @@ export default function CreditReport() {
               </div>
               <div className="detail-row">
                 <span>National ID (Ghana Card)</span>
-                <strong>GHA-*****789-1</strong>
+                <strong>GHA-123456789-1</strong>
               </div>
               <div className="detail-row">
-                <span>Residential Address</span>
-                <strong>Ablekuma, Accra, Ghana</strong>
+                <span>E-maail Address</span>
+                <strong>odmosm@gmail.com</strong>
               </div>
               <div className="detail-row">
                 <span>Phone (Primary)</span>
-                <strong>0244 *** ***</strong>
-              </div>
+                <strong>0244 123 456</strong>
+                </div>
+                 <div className="detail-row">
+                <span>Dependencies</span>
+                <strong>3</strong>
+                </div>
+                 <div className="detail-row">
+                <span>Marital Status</span>
+                <strong>Married</strong>
+                </div>
             </div>
 
             <div className="detail-column">
               <div className="detail-row">
                 <span>Date of Birth</span>
-                <strong>14 March 1985</strong>
+                <strong>14 Mar 1985</strong>
               </div>
               <div className="detail-row">
                 <span>Gender</span>
@@ -399,6 +421,14 @@ export default function CreditReport() {
                 <span>Employer</span>
                 <strong>Self-Employed / SME</strong>
               </div>
+               <div className="detail-row">
+                <span>Digital Address</span>
+                <strong>GS-234-2345</strong>
+                </div>
+                 <div className="detail-row">
+                <span>Nationality</span>
+                <strong>Ghanaian</strong>
+                </div>
               <div className="detail-row">
                 <span>Identity Confidence</span>
                 <span className="verified-badge">
@@ -683,9 +713,10 @@ export default function CreditReport() {
               <thead>
                 <tr>
                   <th>Lender / Institution</th>
+                  <th>No. of Loans</th>
                   <th>Facility Type</th>
-                  <th>Approved</th>
-                  <th>Outstanding</th>
+                  <th>Approved (GHS)</th>
+                  <th>Outstanding (GHS)</th>
                   <th>Status</th>
                   <th>DPD</th>
                   <th>Refi Opp.</th>
@@ -694,7 +725,16 @@ export default function CreditReport() {
               <tbody>
                 {facilityRows.map((row) => (
                   <tr key={row.lender}>
-                    <td><strong>{row.lender}</strong></td>
+                    <td>
+                      <strong 
+                        style={{ cursor: 'pointer', color: 'var(--green-600)', textDecoration: 'underline' }}
+                        onClick={() => scrollToFacility(row.id)}
+                        title="Click to view details"
+                      >
+                        {row.lender}
+                      </strong>
+                    </td>
+                    <td>{row.number}</td>
                     <td>{row.type}</td>
                     <td>{row.approved}</td>
                     <td>{row.outstanding}</td>
@@ -710,11 +750,13 @@ export default function CreditReport() {
                   </tr>
                 ))}
                 <tr className="summary-row">
-                  <td colSpan={2}>TOTAL</td>
-                  <td>3 active facilities</td>
-                  <td>GHS 118,000</td>
+                  <td>TOTAL</td>
+                  <td><center>3</center></td>
                   <td></td>
-                  <td>0 DPD</td>
+                  <td>250,000</td>
+                  <td>118,000</td>
+                  <td></td>
+                  <td>0</td>
                   <td></td>
                 </tr>
               </tbody>
@@ -722,7 +764,7 @@ export default function CreditReport() {
           </div>
 
           {/* Account Detail 1 */}
-          <div className="facility-account">
+          <div id="facility-absa" className="facility-account">
             <div className="facility-account-header">
               <span>Absa Bank Ghana | Personal Loan — Unsecured | 90981737382</span>
               <span className="status-pill success">Performing</span>
@@ -801,7 +843,7 @@ export default function CreditReport() {
           </div>
 
           {/* Account Detail 2 */}
-          <div className="facility-account">
+          <div id="facility-mtn" className="facility-account">
             <div className="facility-account-header">
               <span>MTN Momo Loan | Digital Revolving Loan | 876543 </span>
               <span className="status-pill success">Performing</span>
@@ -880,7 +922,7 @@ export default function CreditReport() {
           </div>
 
           {/* Account Detail 3 */}
-          <div className="facility-account">
+          <div id="facility-bayport" className="facility-account">
             <div className="facility-account-header">
               <span>Bayport Savings and Loans | SME Business-linked Loan | LG7787YY5435</span>
               <span className="status-pill success">Performing</span>
@@ -976,8 +1018,8 @@ export default function CreditReport() {
                   <th>Joint Loan Amount</th>
                   <th>Arrear Amount</th>
                   <th>Months in Arrears</th>
-                  <th>Date of Final Payment</th>
-                  <th>Cash Received</th>
+                  <th>Date of Last Payment</th>
+                  <th>Last Payment Received</th>
                 </tr>
               </thead>
               <tbody>
@@ -989,7 +1031,7 @@ export default function CreditReport() {
                   <td>GHS 0</td>
                   <td>0</td>
                   <td>15 Dec 2028</td>
-                  <td>GHS 12,500 / mo</td>
+                  <td>GHS 12,500</td>
                 </tr>
                 <tr>
                   <td><strong>Kojo Amponsah</strong></td>
@@ -999,7 +1041,7 @@ export default function CreditReport() {
                   <td>GHS 4,200</td>
                   <td>1 month</td>
                   <td>30 May 2026</td>
-                  <td>GHS 5,000 / mo</td>
+                  <td>GHS 5,000</td>
                 </tr>
               </tbody>
             </table>
@@ -1041,7 +1083,7 @@ export default function CreditReport() {
               <div className="affordability-card-header">
                 <span>Affordability Rating</span>
                 <h3>HEALTHY</h3>
-                <p>DSR of 34% is below the 40% caution limit threshold.</p>
+                <p>Debt Service Ratio of 34% is below the 40% caution limit threshold.</p>
               </div>
               <div className="ai-insight-box">
                 <strong>AI LENDING INSIGHT</strong>
@@ -1156,20 +1198,31 @@ export default function CreditReport() {
                     <tr>
                       <th>Cheque No.</th>
                       <th>Issuing Bank</th>
+                      <th>Date Issued</th>
                       <th>Cheque Amount</th>
                       <th>Return Reason</th>
-                      <th>Date Returned</th>
+                      <th>Date Bounced</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td><strong>CHQ-99881</strong></td>
                       <td>Standard Chartered</td>
+                      <td>10 Jan 2025</td>
                       <td>GHS 15,000</td>
                       <td>Insufficient Funds</td>
                       <td>12 Jan 2025</td>
                     </tr>
                     <tr>
+                      <td><strong>GHS-009881</strong></td>
+                      <td>Absa Bank Ghana Ltd</td>
+                      <td>12 Jun 2024</td>
+                      <td>USD 50,000</td>
+                      <td>Fraud</td>
+                      <td>12 Jun 2024</td>
+                    </tr>
+                    <tr>
+                      
                       <td colSpan="5" style={{ textAlign: 'center', color: 'var(--gray-500)' }}>
                         No other dud cheques recorded in the last 5 years.
                       </td>
@@ -1304,7 +1357,7 @@ export default function CreditReport() {
                 Predictive Risk Classifications
               </p>
               <div className="detail-row">
-                <span>Prob. of Default (PD)</span>
+                <span>Probability of Default (PD)</span>
                 <strong>3.8% (12-month forecast)</strong>
               </div>
               <div className="detail-row">
