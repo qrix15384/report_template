@@ -549,6 +549,8 @@ body {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
   border-radius: 8px;
 }
 
@@ -1676,6 +1678,8 @@ body {
   .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
   }
 
   .report-table {
