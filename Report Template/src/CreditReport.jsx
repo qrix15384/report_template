@@ -399,7 +399,7 @@ export default function CreditReport() {
                 <strong>0244 123 456</strong>
                 </div>
                  <div className="detail-row">
-                <span>Dependencies</span>
+                <span>Dependants</span>
                 <strong>3</strong>
                 </div>
                  <div className="detail-row">
