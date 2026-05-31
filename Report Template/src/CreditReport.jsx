@@ -121,10 +121,10 @@ export default function CreditReport() {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '0.85rem',
+        fontSize: '0.65rem',
         flexShrink: 0
       }}>ℹ</div>
-      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--gray-600, #6b7280)' }}>{text}</p>
+      <p style={{  margin: 0, fontSize: '0.65rem', color: 'var(--gray-600, #6b7280)' }}>{text}</p>
     </div>
   );
 
@@ -330,7 +330,7 @@ export default function CreditReport() {
               <span className="meta-label">Branch</span>
               <span className="meta-value">Asante Bekwai</span>
             </div>
-            
+         
           </div>
           
         </header>
