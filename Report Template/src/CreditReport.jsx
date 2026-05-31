@@ -99,6 +99,35 @@ export default function CreditReport() {
     }
   };
 
+  // Helper to render section title (removed inline info icon)
+  const SectionTitleWithInfo = ({ title, subtitle }) => (
+    <div className="section-title">
+      <div>
+        <span>{title}</span>
+      </div>
+      {subtitle && <span className="section-subtitle-tag">{subtitle}</span>}
+    </div>
+  );
+
+  // Small information note to appear under tables/subsections
+  const InfoNote = ({ text }) => (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '8px 0 14px 0' }} className="info-note">
+      <div style={{
+        width: '20px',
+        height: '20px',
+        borderRadius: '50%',
+        background: 'var(--green-100, #e6f4ea)',
+        color: 'var(--green-800, #0b6b3b)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '0.85rem',
+        flexShrink: 0
+      }}>ℹ</div>
+      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--gray-600, #6b7280)' }}>{text}</p>
+    </div>
+  );
+
   // Helper to render repayment cell classes
   const getCellClass = (status) => {
     switch (status) {
@@ -209,6 +238,12 @@ export default function CreditReport() {
           <a href="#ai-insights" className="nav-item" onClick={handleNavClick}>
             <span>⚡</span> AI Insights & Decisions
           </a>
+
+          <div className="nav-divider" />
+
+          <a href="#glossary" className="nav-item nav-item-glossary" onClick={handleNavClick}>
+            <span>📖</span> Glossary of Terms
+          </a>
         </nav>
 
         <div className="sidebar-footer">
@@ -302,10 +337,11 @@ export default function CreditReport() {
 
         {/* Section 1: Executive Summary & Dashboard */}
         <section id="summary" className="report-section section-card">
-          <div className="section-title">
-            SECTION 1 — EXECUTIVE DECISION DASHBOARD
-            <span className="section-subtitle-tag">Bureau Status: Active</span>
-          </div>
+          <SectionTitleWithInfo
+            title="SECTION 1 — EXECUTIVE DECISION DASHBOARD"
+            subtitle="Bureau Status: Active"
+            tooltip="AI-powered credit decision with risk score, default probability, and affordability assessment."
+          />
 
           <div className="score-dashboard-wrapper">
             {/* Score circular gauge */}
@@ -376,10 +412,11 @@ export default function CreditReport() {
 
         {/* Section 2: Borrower Profile */}
         <section id="identity" className="report-section section-card">
-          <div className="section-title">
-            SECTION 2 — BORROWER IDENTITY
-            <span className="section-subtitle-tag">Source Verified</span>
-          </div>
+          <SectionTitleWithInfo
+            title="SECTION 2 — BORROWER IDENTITY"
+            subtitle="Source Verified"
+            tooltip="Verified personal information including identity, contact details, and demographic profile."
+          />
 
           <div className="details-grid">
             <div className="detail-column">
@@ -392,7 +429,7 @@ export default function CreditReport() {
                 <strong>GHA-123456789-1</strong>
               </div>
               <div className="detail-row">
-                <span>E-maail Address</span>
+                <span>E-mail Address</span>
                 <strong>odmosm@gmail.com</strong>
               </div>
               <div className="detail-row">
@@ -445,20 +482,22 @@ export default function CreditReport() {
 
         {/* Section 2b: Demographic History */}
         <section id="demographics" className="report-section section-card">
-          <div className="section-title">
-            SECTION 2B — DEMOGRAPHIC HISTORY
-            <span className="section-subtitle-tag">Audit Trail</span>
-          </div>
+          <SectionTitleWithInfo
+            title="SECTION 2B — DEMOGRAPHIC HISTORY"
+            subtitle="Audit Trail"
+            tooltip="Historical changes to borrower information tracked for compliance and audit purposes."
+          />
 
           <div className="demographics-grid">
             {/* i. Name History */}
             <div className="demographics-card">
               <h4>Name History</h4>
+              <InfoNote text="Lists recorded legal and prior names with the last update date." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
                     <tr>
-                      <th>Name (Main Subject)</th>
+                      <th>Name</th>
                       <th>Type</th>
                       <th>Last Update</th>
                     </tr>
@@ -482,6 +521,7 @@ export default function CreditReport() {
             {/* ii. Identification Number History */}
             <div className="demographics-card">
               <h4>Identification Number History</h4>
+              <InfoNote text="Shows national and other ID numbers, their type and last update for verification." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -515,6 +555,7 @@ export default function CreditReport() {
             {/* iii. Telephone History */}
             <div className="demographics-card">
               <h4>Telephone History</h4>
+              <InfoNote text="Primary and secondary contact numbers recorded with last update timestamps." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -548,6 +589,7 @@ export default function CreditReport() {
             {/* iv. Address History */}
             <div className="demographics-card">
               <h4>Address History</h4>
+              <InfoNote text="Residential and mailing address changes tracked for audit and contact purposes." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -582,12 +624,14 @@ export default function CreditReport() {
 
         {/* Section 3: Credit Health Summary & Payment Heatmap */}
         <section id="history" className="report-section section-card">
-          <div className="section-title">
-            SECTION 3 — CREDIT HEALTH & PAYMENT ANALYSIS
-            <span className="section-subtitle-tag">24-Month History</span>
-          </div>
+          <SectionTitleWithInfo
+            title="SECTION 3 — CREDIT HEALTH & PAYMENT ANALYSIS"
+            subtitle="24-Month History"
+            tooltip="Summary of credit accounts, payment history heatmap, and repayment behavior analysis."
+          />
 
           <div className="table-responsive" style={{ marginBottom: '30px' }}>
+            <InfoNote text="Overview of credit health indicators and a short interpretation for each metric." />
             <table className="report-table">
               <thead>
                 <tr>
@@ -704,12 +748,14 @@ export default function CreditReport() {
 
         {/* Section 4: Total Exposure & Active Facilities */}
         <section id="facilities" className="report-section section-card">
-          <div className="section-title">
-            SECTION 4 — TOTAL EXPOSURE & FACILITY STRUCTURE
-            <span className="section-subtitle-tag">Active Liability Accounts</span>
-          </div>
+          <SectionTitleWithInfo
+            title="SECTION 4 — TOTAL EXPOSURE & FACILITY STRUCTURE"
+            subtitle="Active Liability Accounts"
+            tooltip="Detailed breakdown of all active loans and facilities with outstanding balances and payment history."
+          />
 
           <div className="table-responsive">
+            <InfoNote text="Summary of active facilities with approved amounts, outstanding balances, and current status." />
             <table className="report-table">
               <thead>
                 <tr>
@@ -1004,12 +1050,14 @@ export default function CreditReport() {
 
         {/* Section 4B: Joint Loan Account Details */}
         <section id="joint-loans" className="report-section section-card">
-          <div className="section-title">
-            SECTION 4B — JOINT LOAN ACCOUNT DETAILS
-            <span className="section-subtitle-tag">Co-Borrower Liabilities</span>
-          </div>
+          <SectionTitleWithInfo
+            title="SECTION 4B — JOINT LOAN ACCOUNT DETAILS"
+            subtitle="Co-Borrower Liabilities"
+            tooltip="Details of loans shared with co-borrowers and joint liability obligations."
+          />
 
           <div className="table-responsive">
+            <InfoNote text="Lists co-borrowers and joint loan exposures with recent payment details." />
             <table className="report-table">
               <thead>
                 <tr>
@@ -1052,7 +1100,7 @@ export default function CreditReport() {
         {/* Section 5: Affordability & Cashflow Analysis */}
         <section id="affordability" className="report-section section-card">
           <div className="section-title">
-            SECTION 5 — AFFORDABILITY & CASHFLOW ANALYSIS
+            SECTION 5 — AFFORDABILITY & CASHFLOW ANALYSIS (GHS)
             <span className="section-subtitle-tag">Capacity Engine</span>
           </div>
 
@@ -1102,6 +1150,7 @@ export default function CreditReport() {
           </div>
 
           <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--green-900)', margin: '0 0 14px 0' }}>Early Warning Risk Signals</p>
+          <InfoNote text="Early warning indicators to help prioritize institutional review and monitoring actions." />
           <div className="table-responsive" style={{ marginBottom: '30px' }}>
             <table className="report-table">
               <thead>
@@ -1137,7 +1186,9 @@ export default function CreditReport() {
           </div>
 
           <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--green-900)', margin: '0 0 14px 0' }}>Fraud & Synthetic Identity Verification Checks</p>
+          <InfoNote text="Identity verification checks and risk flags to surface potential fraudulent or synthetic profiles." />
           <div className="table-responsive">
+            <InfoNote text="Institutional enquiries logged against the borrower in the past 12 months." />
             <table className="report-table">
               <thead>
                 <tr>
@@ -1193,6 +1244,7 @@ export default function CreditReport() {
             {/* Dud Cheques Info */}
             <div className="sub-section-card">
               <h4>Dud Cheque Information</h4>
+              <InfoNote text="Records of returned cheques with reasons and dates for bank disclosure." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -1236,6 +1288,7 @@ export default function CreditReport() {
             {/* Judgement Info */}
             <div className="sub-section-card">
               <h4>Judgement Information</h4>
+              <InfoNote text="Court judgements and their status, useful for legal and recovery reviews." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -1435,6 +1488,147 @@ export default function CreditReport() {
             <p className="compliance-footer-text">
               This intelligence dossier is generated by XDS Data Ghana Limited, registered and licensed by the Bank of Ghana under the Credit Reporting Act, 2007 (Act 726). Address: Suite A701, Octagon Building, Barnes Road, Accra, Ghana. Sample dossiers are configured for testing purposes. Real-time disclosures are regulated under the Data Protection Act, 2012 (Act 843), central bank guidelines, consumer consent statutes, and organizational credit criteria. XDS Data Ghana Limited is the premier credit bureau in Ghana and West Africa. | www.xdsdata.com
             </p>
+          </div>
+        </section>
+        {/* Glossary of Terms */}
+        <section id="glossary" className="report-section section-card glossary-section">
+          <SectionTitleWithInfo
+            title="GLOSSARY OF CREDIT TERMS"
+            subtitle="Reference Guide"
+          />
+
+          <p className="glossary-intro">
+            The following definitions explain the key credit and financial terms used throughout this report.
+            They are provided to assist lenders, relationship managers, and authorised users in accurately
+            interpreting the data presented.
+          </p>
+
+          {[
+            {
+              letter: 'A',
+              terms: [
+                { term: 'Affordability', definition: 'A lender\'s assessment of a borrower\'s capacity to repay a loan based on their income, existing obligations, and living expenses without financial hardship.' },
+                { term: 'Arrears', definition: 'The amount of debt that is overdue or unpaid past its scheduled due date. A borrower is "in arrears" when one or more payments have not been made on time.' },
+              ],
+            },
+            {
+              letter: 'B',
+              terms: [
+                { term: 'Bureau Enquiry', definition: 'A formal request made by a lender or institution to the credit bureau to access a borrower\'s credit report. Enquiries are logged and may affect the credit score if excessive.' },
+                { term: 'Borrower Identity', definition: 'The verified personal and demographic information of the subject of a credit report, including full name, national ID, date of birth, contact details, and employment.' },
+              ],
+            },
+            {
+              letter: 'C',
+              terms: [
+                { term: 'Credit Score', definition: 'A numerical representation of a borrower\'s creditworthiness, calculated by the bureau using payment history, outstanding debt, credit utilisation, and other financial behaviour indicators. XDS scores range from 0 to 900.' },
+                { term: 'Credit Report', definition: 'A comprehensive document compiled by a credit bureau summarising a borrower\'s credit history, active facilities, payment behaviour, public records, and risk indicators.' },
+                { term: 'Credit Utilisation', definition: 'The proportion of available credit that a borrower is currently using. High utilisation rates (above 70%) may negatively impact credit scores.' },
+                { term: 'Co-Borrower', definition: 'An individual who jointly applies for and shares legal responsibility for repaying a loan alongside the primary borrower. Also referred to as a joint applicant.' },
+                { term: 'Consolidation', definition: 'The process of combining multiple existing debts into a single loan, typically to reduce monthly repayment obligations or secure a lower interest rate.' },
+              ],
+            },
+            {
+              letter: 'D',
+              terms: [
+                { term: 'Days Past Due (DPD)', definition: 'The number of calendar days a borrower\'s payment is overdue beyond the scheduled due date. A DPD of 0 means the account is current. DPD thresholds (e.g. 30, 60, 90 days) determine delinquency classifications.' },
+                { term: 'Debt Service Ratio (DSR)', definition: 'The percentage of a borrower\'s gross monthly income consumed by total monthly debt repayments. A DSR below 40% is generally considered healthy; above 50% signals over-indebtedness risk.' },
+                { term: 'Default', definition: 'The failure to repay a loan or meet the terms of a credit agreement. Typically declared after a sustained period of non-payment (commonly 90+ DPD).' },
+                { term: 'Delinquency', definition: 'A loan or credit account that has missed one or more payments and is overdue. Delinquency severity is measured in DPD bands.' },
+                { term: 'Demographic History', definition: 'A bureau audit trail tracking changes to a borrower\'s personal information over time, including prior names, phone numbers, addresses, and identification numbers.' },
+                { term: 'Digital Loan', definition: 'A short-term credit facility disbursed and managed entirely through a mobile or digital platform (e.g. MTN Mobile Money loan). Often characterised by rapid disbursement and high interest rates.' },
+                { term: 'Disposable Income', definition: 'The portion of a borrower\'s monthly income remaining after all mandatory deductions and debt repayments. Used to estimate headroom for new credit.' },
+                { term: 'Dud Cheque', definition: 'A cheque that has been returned unpaid by the bank, typically due to insufficient funds, a closed account, or fraud. Also referred to as a bounced cheque.' },
+              ],
+            },
+            {
+              letter: 'E',
+              terms: [
+                { term: 'Exposure', definition: 'The total outstanding amount a lender or set of lenders is at risk of losing if a borrower defaults. Aggregate credit exposure includes all active facilities.' },
+              ],
+            },
+            {
+              letter: 'F',
+              terms: [
+                { term: 'Facility', definition: 'A formal credit arrangement between a lender and a borrower, including loans, overdrafts, credit cards, and revolving credit lines.' },
+                { term: 'Financial Stress', definition: 'Indicators suggesting a borrower may be unable to meet their financial obligations. These include missed payments, rapid digital borrowing, and multiple simultaneous credit applications.' },
+              ],
+            },
+            {
+              letter: 'J',
+              terms: [
+                { term: 'Judgement', definition: 'A legally binding court order requiring a borrower to repay a debt to a creditor. Judgements are matters of public record and indicate a serious credit event.' },
+                { term: 'Joint Loan', definition: 'A loan held in the name of two or more borrowers, each sharing full legal responsibility for repayment. The credit behaviour of all parties is reflected in each borrower\'s bureau profile.' },
+              ],
+            },
+            {
+              letter: 'L',
+              terms: [
+                { term: 'Lender', definition: 'A financial institution, bank, fintech, or individual that extends credit to a borrower under agreed terms and conditions.' },
+                { term: 'Loan Concentration Risk', definition: 'The risk arising when a borrower\'s credit obligations are concentrated with a single lender or in a single product type, reducing resilience to market changes.' },
+              ],
+            },
+            {
+              letter: 'O',
+              terms: [
+                { term: 'On-Time Payment', definition: 'A repayment made in full on or before the scheduled due date. Consistent on-time payments positively impact credit scores.' },
+                { term: 'Outstanding Balance', definition: 'The remaining principal amount owed on a loan or credit facility at a given point in time, excluding future interest not yet accrued.' },
+                { term: 'Over-Indebtedness', definition: 'A condition where a borrower\'s total debt obligations exceed their sustainable repayment capacity, significantly increasing default risk.' },
+              ],
+            },
+            {
+              letter: 'P',
+              terms: [
+                { term: 'Payment History', definition: 'A chronological record of a borrower\'s loan repayment behaviour, typically displayed over a 24-month window. The single most influential factor in credit scoring.' },
+                { term: 'Performing Loan', definition: 'A loan where the borrower is meeting repayment obligations and there are no significant overdue payments (typically 0–30 DPD).' },
+                { term: 'Probability of Default (PD)', definition: 'A statistical estimate of the likelihood that a borrower will fail to meet their credit obligations within a specified period (commonly 12 months). Expressed as a percentage.' },
+              ],
+            },
+            {
+              letter: 'R',
+              terms: [
+                { term: 'Refinance Opportunity', definition: 'An assessment of whether a borrower\'s existing loans could be restructured or transferred to achieve better terms, lower rates, or improved cash flow.' },
+                { term: 'Repayment Consistency', definition: 'A measure of how regularly and reliably a borrower makes scheduled repayments. High consistency is a strong positive credit signal.' },
+                { term: 'Risk Signal', definition: 'An indicator flagged in a credit report that warrants attention from a lender, such as increased enquiries, rapid debt growth, or short-term digital borrowing patterns.' },
+              ],
+            },
+            {
+              letter: 'S',
+              terms: [
+                { term: 'SME Loan', definition: 'A loan extended to a Small or Medium-sized Enterprise, often tied to business operations, payroll, or capital expenditure.' },
+                { term: 'Synthetic Identity', definition: 'A fraudulent identity constructed using a combination of real and fabricated personal information to open credit accounts or deceive lenders.' },
+              ],
+            },
+            {
+              letter: 'T',
+              terms: [
+                { term: 'Total Exposure', definition: 'The aggregate outstanding debt owed by a borrower across all active credit facilities from all lenders at a given point in time.' },
+              ],
+            },
+            {
+              letter: 'X',
+              terms: [
+                { term: 'XDS Credit Score', definition: 'The proprietary credit score assigned by XDS Data Ghana Limited. Scored on a scale of 0–900, where higher scores indicate lower credit risk. Scores above 700 are considered low risk.' },
+              ],
+            },
+          ].map(({ letter, terms }) => (
+            <div key={letter} className="glossary-group">
+              <div className="glossary-letter-badge">{letter}</div>
+              <div className="glossary-terms-list">
+                {terms.map(({ term, definition }) => (
+                  <div key={term} className="glossary-term-row">
+                    <div className="glossary-term-name">{term}</div>
+                    <div className="glossary-term-def">{definition}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <div className="glossary-footer-note">
+            <span>📌</span>
+            Definitions are aligned with the Credit Reporting Act, 2007 (Act 726) and general West African banking practices.
+            For regulatory clarifications, contact XDS Data Ghana Limited at <strong>ask@xdsdata.com</strong>.
           </div>
         </section>
       </main>
