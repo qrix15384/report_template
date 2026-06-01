@@ -369,17 +369,17 @@ export default function CreditReport() {
               <div className="dashboard-panel alert-panel">
                 <span className="panel-caption">Decision Signal</span>
                 <h2>APPROVE</h2>
-                <p className="panel-note">Approve with conditions</p>
-                <p className="small-note">Score trend: Improving ↑</p>
+                <p className="panel-note">With Conditions</p>
+                <p className="small-note">Trend: Improving ↑</p>
               </div>
 
               <div className="dashboard-panel">
                 <span className="panel-caption">Probability of Default</span>
                 <h2>3.8%</h2>
-                <p className="panel-note">12-month forecast</p>
+                <p className="panel-note">12-Month Forecast</p>
                 <p className="small-note">Stress Forecast: Stable</p>
               </div>
-
+git 
               <div className="dashboard-panel positive-panel">
                 <span className="panel-caption">Affordability Status</span>
                 <h2>HEALTHY</h2>
@@ -1446,18 +1446,19 @@ export default function CreditReport() {
           </div>
 
           {/* AI credit summary narrative paragraph */}
-          <div style={{ background: '#ffffff', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '24px', marginBottom: '40px' }}>
-            <p style={{ margin: '0 0 12px 0', fontWeight: 'bold', color: 'var(--green-950)', fontSize: '0.9rem' }}>
-              AI Executive Narrative — For Relationship Manager Reference
+          <div style={{ background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)', borderRadius: '12px', padding: '24px', marginBottom: '40px' }}>
+           {/* background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)',*/}
+            <p style={{ margin: '0 0 12px 0', fontWeight: 'bold', color: 'var(--gray-100)', fontSize: '0.9rem' }}>
+              <span style={{ color: 'var(--gold-500)' }}>✦</span> AI Executive Narrative — For Relationship Manager Reference
             </p>
-            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-800)', margin: '0 0 12px 0' }}>
+            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: '0 0 12px 0' }}>
               Kwame Mensah demonstrates highly consistent payment behavior with an improving streak over the past 14 consecutive months. Total aggregate debt exposure is distributed across three discrete institutions (commercial bank, digital fintech lender, and SME microfinance), creating a total Debt Service Ratio (DSR) of 34%. This is well-managed and below the critical 40% warning limit.
             </p>
-            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-800)', margin: '0 0 12px 0' }}>
+            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: '0 0 12px 0' }}>
               The primary risk signal is a slight spike in credit inquiries, which can indicate that the customer is seeking additional capital. Relationship managers must confirm whether any newly approved loans have been finalized before discounting new funds to prevent over-leverage. Identification audits and synthetic fraud screens are entirely verified and clean.
             </p>
-            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-800)', margin: 0 }}>
-              <strong>Lending Directive:</strong> APPROVE WITH CONDITIONS. Verify income statements and confirm competitors' outstanding debt margins prior to final disbursement. Implement monthly bureau automated event monitoring.
+            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: 0 }}>
+              <strong>Lending Recommendation:</strong> APPROVE WITH CONDITIONS. Verify income statements and confirm competitors' outstanding debt margins prior to final disbursement. Implement monthly bureau automated event monitoring.
             </p>
           </div>
 
@@ -1626,7 +1627,7 @@ export default function CreditReport() {
           ))}
 
           <div className="glossary-footer-note">
-            <span>📌</span>
+            <span>❗️</span>
             Definitions are aligned with the Credit Reporting Act, 2007 (Act 726) and general West African banking practices.
             For regulatory clarifications, contact XDS Data Ghana Limited at <strong>ask@xdsdata.com</strong>.
           </div>
