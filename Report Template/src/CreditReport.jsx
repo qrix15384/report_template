@@ -379,7 +379,6 @@ export default function CreditReport() {
                 <p className="panel-note">12-Month Forecast</p>
                 <p className="small-note">Stress Forecast: Stable</p>
               </div>
-git 
               <div className="dashboard-panel positive-panel">
                 <span className="panel-caption">Affordability Status</span>
                 <h2>HEALTHY</h2>
@@ -1448,7 +1447,7 @@ git
           {/* AI credit summary narrative paragraph */}
           <div style={{ background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)', borderRadius: '12px', padding: '24px', marginBottom: '40px' }}>
            {/* background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)',*/}
-            <p style={{ margin: '0 0 12px 0', fontWeight: 'bold', color: 'var(--gray-100)', fontSize: '0.9rem' }}>
+            <p style={{ margin: '0 0 12px 0', fontWeight: 'bold', color: 'var(--gold-500)', fontSize: '1.2rem' }}>
               <span style={{ color: 'var(--gold-500)' }}>✦</span> AI Executive Narrative — For Relationship Manager Reference
             </p>
             <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: '0 0 12px 0' }}>
@@ -1457,8 +1456,11 @@ git
             <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: '0 0 12px 0' }}>
               The primary risk signal is a slight spike in credit inquiries, which can indicate that the customer is seeking additional capital. Relationship managers must confirm whether any newly approved loans have been finalized before discounting new funds to prevent over-leverage. Identification audits and synthetic fraud screens are entirely verified and clean.
             </p>
+            <p style={{ fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--gold-500)', margin: 0 }}>
+              <strong>Lending Recommendation:</strong> 
+            </p>
             <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: 0 }}>
-              <strong>Lending Recommendation:</strong> APPROVE WITH CONDITIONS. Verify income statements and confirm competitors' outstanding debt margins prior to final disbursement. Implement monthly bureau automated event monitoring.
+              APPROVE WITH CONDITIONS. Verify income statements and confirm competitors' outstanding debt margins prior to final disbursement. Implement monthly bureau automated event monitoring.
             </p>
           </div>
 
@@ -1629,7 +1631,7 @@ git
           <div className="glossary-footer-note">
             <span>❗️</span>
             Definitions are aligned with the Credit Reporting Act, 2007 (Act 726) and general West African banking practices.
-            For regulatory clarifications, contact XDS Data Ghana Limited at <strong>ask@xdsdata.com</strong>.
+            For regulatory clarifications, contact XDS Data Ghana Limited at ask@xdsdata.com
           </div>
         </section>
       </main>
