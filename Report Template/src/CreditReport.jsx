@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from 'react'
 import logo from './assets/xdsdata-logo.png'
 
+// Print utility function
+const handlePrint = () => {
+  // Add print classes before printing
+  document.body.classList.add('printing');
+  
+  // Trigger print dialog
+  window.print();
+  
+  // Remove print classes after printing
+  setTimeout(() => {
+    document.body.classList.remove('printing');
+  }, 1000);
+};
+
+// Add print keyboard shortcut (Ctrl+P or Cmd+P)
+const setupPrintShortcut = () => {
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+      e.preventDefault();
+      handlePrint();
+    }
+  });
+};
+
 const facilityRows = [
   {
     lender: 'Absa Bank Ghana',
@@ -51,6 +75,11 @@ historyAccount3[19] = 'L';  // Delayed catchup
 
 export default function CreditReport() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Setup print keyboard shortcut on mount
+  useEffect(() => {
+    setupPrintShortcut();
+  }, []);
 
   // Close sidebar when a nav link is clicked
   const handleNavClick = () => {
@@ -252,7 +281,7 @@ export default function CreditReport() {
             <div className="user-info">
             </div>
           </div>
-          <button className="btn-print" onClick={() => window.print()}>
+          <button className="btn-print" onClick={handlePrint} title="Print report (Ctrl+P)">
             <span>🖨️</span> Export PDF / Print
           </button>
         </div>
@@ -298,7 +327,8 @@ export default function CreditReport() {
               </a>
               <br></br>
               <br></br>
-              License No. 001
+              Credit Bureau License No. 001
+              <a href="https://www.xdsdata.com" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff', textDecoration: 'underline' }}></a>
             </h1>
           </div>
         </section>
