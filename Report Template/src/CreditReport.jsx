@@ -345,11 +345,11 @@ export default function CreditReport() {
               <span className="meta-value">17 May 2026 | 3:46 PM</span>
             </div>
             <div className="meta-item">
-              <span className="meta-label">Requesting Bank</span>
+              <span className="meta-label">Requesting Inst.</span>
               <span className="meta-value">ABC Rural Bank Ltd.</span>
             </div>
             <div className="meta-item">
-              <span className="meta-label">User</span>
+              <span className="meta-label">Accessed By</span>
               <span className="meta-value">Abena Amponsah</span>
             </div>
             <div className="meta-item">
@@ -357,10 +357,15 @@ export default function CreditReport() {
               <span className="meta-value">Regional Manager</span>
             </div>
             <div className="meta-item">
-              <span className="meta-label">Branch</span>
-              <span className="meta-value">Asante Bekwai</span>
-            </div>
-         
+              <span className="meta-label">Purpose</span>
+              <span className="meta-value">Credit Assessement</span>
+              </div> 
+             <div className="meta-item">
+              <span className="meta-label"></span>
+              <span className="status-pill danger" style={{ background: '#fdf0f0', border: '1px solid #fbc4c4', color: '#b22222', padding: '2px 8px' }}>CONFIDENTIAL</span>
+              </div> 
+          
+
           </div>
           
         </header>
@@ -435,6 +440,73 @@ export default function CreditReport() {
             <div>
               <span>Active Facilities</span>
               <strong>3</strong>
+            </div>
+          </div>
+        </section>
+
+        {/* Borrower Portrait Card */}
+        <section className="report-section section-card" style={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: '24px',
+          padding: '20px 24px'
+        }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+            flexShrink: 0
+          }}>
+            <h3 style={{
+              margin: '0',
+              fontSize: '0.95rem',
+              fontWeight: '600',
+              color: 'var(--gray-950)'
+            }}>Borrower Portrait</h3>
+            <div style={{
+              width: '35mm',
+              height: '45mm',
+              background: 'var(--gray-200, #e5e7eb)',
+              border: '2px dashed var(--gray-400, #9ca3af)',
+              borderRadius: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--gray-500, #6b7280)',
+              fontSize: '2rem'
+            }}>
+              📷
+            </div>
+            <span style={{
+              fontSize: '0.75rem',
+              color: 'var(--gray-500, #6b7280)',
+              fontStyle: 'italic'
+            }}>Passport Size: 35x45mm</span>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '16px 32px',
+            flex: 1
+          }}>
+            <div>
+              <span style={{fontSize: '0.8rem', color: 'var(--gray-700)', display: 'block', marginBottom: '4px'}}>Total Exposure</span>
+              <strong style={{fontSize: '0.95rem', color: 'var(--gray-950)'}}>GHS 118,000</strong>
+            </div>
+            <div>
+              <span style={{fontSize: '0.8rem', color: 'var(--gray-700)', display: 'block', marginBottom: '4px'}}>Monthly Repayment</span>
+              <strong style={{fontSize: '0.95rem', color: 'var(--gray-950)'}}>GHS 8,500</strong>
+            </div>
+            <div>
+              <span style={{fontSize: '0.8rem', color: 'var(--gray-700)', display: 'block', marginBottom: '4px'}}>Current Arrears</span>
+              <strong style={{fontSize: '0.95rem', color: 'var(--gray-950)'}}>GHS 0</strong>
+            </div>
+            <div>
+              <span style={{fontSize: '0.8rem', color: 'var(--gray-700)', display: 'block', marginBottom: '4px'}}>Active Facilities</span>
+              <strong style={{fontSize: '0.95rem', color: 'var(--gray-950)'}}>3</strong>
             </div>
           </div>
         </section>

@@ -16,6 +16,8 @@
   --gold-500: #bfa243;
   --gold-900: #7a5c1e;
   --blue-700: #115cd4;
+  --blue-400: #2A52BE;
+  --red-500: #D42911;
 }
 
 * {
@@ -3714,7 +3716,7 @@ body.printing {
     border: 1px solid var(--green-300) !important;
     color: var(--green-700) !important;
   }
-
+ 
   .status-pill {
     background: var(--green-100) !important;
     color: var(--green-800) !important;
