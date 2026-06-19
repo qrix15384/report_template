@@ -290,7 +290,7 @@ body {
   border: 1px solid var(--gray-200);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-  padding: 30px;
+  padding: 10px;
 }
 
 .section-title {
@@ -595,14 +595,14 @@ body {
 /* Details and Identity Grid */
 .details-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  grid-template-columns: 0.50fr 0.50fr;
+  gap: 350px;
 }
 
 .detail-column {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 1px;
 }
 
 .detail-row {
@@ -1419,7 +1419,7 @@ body {
 .double-card-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 12px;
 }
 
 .sub-section-card {
@@ -2885,7 +2885,7 @@ body.printing {
   }
 
   .detail-column {
-    gap: 0;
+    gap: 10px;
   }
 
   .detail-row {

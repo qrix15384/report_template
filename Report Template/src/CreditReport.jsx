@@ -5,10 +5,10 @@ import logo from './assets/xdsdata-logo.png'
 const handlePrint = () => {
   // Add print classes before printing
   document.body.classList.add('printing');
-  
+
   // Trigger print dialog
   window.print();
-  
+
   // Remove print classes after printing
   setTimeout(() => {
     document.body.classList.remove('printing');
@@ -153,7 +153,7 @@ export default function CreditReport() {
         fontSize: '0.65rem',
         flexShrink: 0
       }}>ℹ</div>
-      <p style={{  margin: 0, fontSize: '0.65rem', color: 'var(--gray-600, #6b7280)' }}>{text}</p>
+      <p style={{ margin: 0, fontSize: '0.65rem', color: 'var(--gray-600, #6b7280)' }}>{text}</p>
     </div>
   );
 
@@ -192,7 +192,7 @@ export default function CreditReport() {
   ];
 
   // Helper for month-year labels
-  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const getMonthYear = (index) => {
     const startYear = 2021; // base year for month 0 -> Jan 2021
     const month = index % 12;
@@ -203,7 +203,7 @@ export default function CreditReport() {
   return (
     <div className="app-container">
       {/* Hamburger Menu Button (Mobile) */}
-      <button 
+      <button
         className="hamburger-btn"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         aria-label="Toggle menu"
@@ -230,7 +230,7 @@ export default function CreditReport() {
       {/* Sidebar Navigation Panel */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-         <img src={logo} alt="xdsdata logo" className="sidebar-logo" />
+          <img src={logo} alt="xdsdata logo" className="sidebar-logo" />
         </div>
 
         <nav className="sidebar-nav">
@@ -277,7 +277,7 @@ export default function CreditReport() {
 
         <div className="sidebar-footer">
           <div className="sidebar-user">
-            
+
             <div className="user-info">
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function CreditReport() {
       {/* Main Report Dashboard Content */}
       <main className="main-content">
         {/* Report Overview Banner Section */}
-        <section 
+        <section
           style={{
             background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)',
             color: '#ffffff',
@@ -304,19 +304,19 @@ export default function CreditReport() {
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
-            <img 
-              src={logo} 
-              alt="XDS Data Ghana Limited logo" 
+            <img
+              src={logo}
+              alt="XDS Data Ghana Limited logo"
               style={{
                 width: '280px',
                 height: 'auto',
                 flexShrink: 0,
                 backgroundColor: 'transparent'
-              }} 
+              }}
             />
-            <div className="header-badge" style={{margin: '0'}}>Smart Detailed Credit Report</div>
+            <div className="header-badge" style={{ margin: '0' }}>Smart Detailed Credit Report</div>
           </div>
-          
+
           <div style={{ textAlign: 'right' }}>
             <h1 style={{ margin: '0 0 8px 0', fontSize: '1.0rem', fontWeight: '700' }}>
               XDS Data Ghana Limited
@@ -359,15 +359,15 @@ export default function CreditReport() {
             <div className="meta-item">
               <span className="meta-label">Purpose</span>
               <span className="meta-value">Credit Assessement</span>
-              </div> 
-             <div className="meta-item">
+            </div>
+            <div className="meta-item">
               <span className="meta-label"></span>
               <span className="status-pill danger" style={{ background: '#fdf0f0', border: '1px solid #fbc4c4', color: '#b22222', padding: '2px 8px' }}>CONFIDENTIAL</span>
-              </div> 
-          
+            </div>
+
 
           </div>
-          
+
         </header>
 
         {/* Section 1: Executive Summary & Dashboard */}
@@ -443,76 +443,130 @@ export default function CreditReport() {
             </div>
           </div>
         </section>
-
-        {/* Borrower Portrait Card */}
-        <section className="report-section section-card" style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '24px',
-          padding: '20px 24px'
-        }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-            flexShrink: 0
-          }}>
-            <h3 style={{
-              margin: '0',
-              fontSize: '0.95rem',
-              fontWeight: '600',
-              color: 'var(--gray-950)'
-            }}>Borrower Portrait</h3>
-            <div style={{
-              width: '35mm',
-              height: '45mm',
-              background: 'var(--gray-200, #e5e7eb)',
-              border: '2px dashed var(--gray-400, #9ca3af)',
-              borderRadius: '2px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--gray-500, #6b7280)',
-              fontSize: '2rem'
-            }}>
-              📷
-            </div>
-            <span style={{
-              fontSize: '0.75rem',
-              color: 'var(--gray-500, #6b7280)',
-              fontStyle: 'italic'
-            }}>Passport Size: 35x45mm</span>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '16px 32px',
-            flex: 1
-          }}>
-            <div>
-              <span style={{fontSize: '0.8rem', color: 'var(--gray-700)', display: 'block', marginBottom: '4px'}}>Total Exposure</span>
-              <strong style={{fontSize: '0.95rem', color: 'var(--gray-950)'}}>GHS 118,000</strong>
-            </div>
-            <div>
-              <span style={{fontSize: '0.8rem', color: 'var(--gray-700)', display: 'block', marginBottom: '4px'}}>Monthly Repayment</span>
-              <strong style={{fontSize: '0.95rem', color: 'var(--gray-950)'}}>GHS 8,500</strong>
-            </div>
-            <div>
-              <span style={{fontSize: '0.8rem', color: 'var(--gray-700)', display: 'block', marginBottom: '4px'}}>Current Arrears</span>
-              <strong style={{fontSize: '0.95rem', color: 'var(--gray-950)'}}>GHS 0</strong>
-            </div>
-            <div>
-              <span style={{fontSize: '0.8rem', color: 'var(--gray-700)', display: 'block', marginBottom: '4px'}}>Active Facilities</span>
-              <strong style={{fontSize: '0.95rem', color: 'var(--gray-950)'}}>3</strong>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 2: Borrower Profile */}
+        
+         
+    {/* Section 2: Borrower Profile */}
         <section id="identity" className="report-section section-card">
+          <SectionTitleWithInfo
+            title="SECTION 2 — BORROWER IDENTITY"
+            subtitle="Source Verified"
+            tooltip="Verified personal information including identity, contact details, and demographic profile."
+          />
+<div
+  className="details-grid"
+  style={{
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    gap: "24px",
+    alignItems: "start",
+  }}
+>
+  {/* Left Column */}
+  <div className="detail-column">
+    <div className="detail-row">
+      <span>Full Name</span>
+      <strong>Kwame Mensah</strong>
+    </div>
+    <div className="detail-row">
+      <span>National ID (Ghana Card)</span>
+      <strong>GHA-123456789-1</strong>
+    </div>
+    <div className="detail-row">
+      <span>E-mail Address</span>
+      <strong>odmosm@gmail.com</strong>
+    </div>
+    <div className="detail-row">
+      <span>Phone (Primary)</span>
+      <strong>0244 123 456</strong>
+    </div>
+    <div className="detail-row">
+      <span>Dependants</span>
+      <strong>3</strong>
+    </div>
+    <div className="detail-row">
+      <span>Marital Status</span>
+      <strong>Married</strong>
+    </div>
+  </div>
+
+  {/* Middle Photo Column */}
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "flex-start",
+    }}
+  >
+    <div
+      style={{
+        width: "35mm",
+        height: "45mm",
+        background: "var(--gray-200, #e5e7eb)",
+        border: "2px dashed var(--gray-400, #9ca3af)",
+        borderRadius: "2px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "var(--gray-500, #6b7280)",
+        fontSize: "2rem",
+      }}
+    >
+      📷
+    </div>
+
+    <div
+      style={{
+        marginTop: "8px",
+        fontSize: "0.75rem",
+        color: "var(--gray-500, #6b7280)",
+        fontStyle: "italic",
+        textAlign: "center",
+      }}
+    >
+      Passport Size: 35 × 45 mm
+    </div>
+  </div>
+
+  {/* Right Column */}
+  <div className="detail-column">
+    <div className="detail-row">
+      <span>Date of Birth</span>
+      <strong>14 Mar 1985</strong>
+    </div>
+    <div className="detail-row">
+      <span>Gender</span>
+      <strong>Male</strong>
+    </div>
+    <div className="detail-row">
+      <span>Employer</span>
+      <strong>Self-Employed / SME</strong>
+    </div>
+    <div className="detail-row">
+      <span>Digital Address</span>
+      <strong>GS-234-2345</strong>
+    </div>
+    <div className="detail-row">
+      <span>Nationality</span>
+      <strong>Ghanaian</strong>
+    </div>
+    <div className="detail-row">
+      <span>Identity Confidence</span>
+      <span className="verified-badge">
+        VERIFIED (100%)
+      </span>
+    </div>
+  </div>
+</div>
+          </section>
+
+
+
+
+
+
+ {/* Section 2: Borrower Profile 
+ <section id="identity" className="report-section section-card">
           <SectionTitleWithInfo
             title="SECTION 2 — BORROWER IDENTITY"
             subtitle="Source Verified"
@@ -536,15 +590,15 @@ export default function CreditReport() {
               <div className="detail-row">
                 <span>Phone (Primary)</span>
                 <strong>0244 123 456</strong>
-                </div>
-                 <div className="detail-row">
+              </div>
+              <div className="detail-row">
                 <span>Dependants</span>
                 <strong>3</strong>
-                </div>
-                 <div className="detail-row">
+              </div>
+              <div className="detail-row">
                 <span>Marital Status</span>
                 <strong>Married</strong>
-                </div>
+              </div>
             </div>
 
             <div className="detail-column">
@@ -560,14 +614,14 @@ export default function CreditReport() {
                 <span>Employer</span>
                 <strong>Self-Employed / SME</strong>
               </div>
-               <div className="detail-row">
+              <div className="detail-row">
                 <span>Digital Address</span>
                 <strong>GS-234-2345</strong>
-                </div>
-                 <div className="detail-row">
+              </div>
+              <div className="detail-row">
                 <span>Nationality</span>
                 <strong>Ghanaian</strong>
-                </div>
+              </div>
               <div className="detail-row">
                 <span>Identity Confidence</span>
                 <span className="verified-badge">
@@ -579,7 +633,8 @@ export default function CreditReport() {
               </div>
             </div>
           </div>
-        </section>
+        </section> 
+ */}
 
         {/* Section 2b: Demographic History */}
         <section id="demographics" className="report-section section-card">
@@ -874,7 +929,7 @@ export default function CreditReport() {
                 {facilityRows.map((row) => (
                   <tr key={row.lender}>
                     <td>
-                      <strong 
+                      <strong
                         style={{ cursor: 'pointer', color: 'var(--green-600)', textDecoration: 'underline' }}
                         onClick={() => scrollToFacility(row.id)}
                         title="Click to view details"
@@ -1376,7 +1431,7 @@ export default function CreditReport() {
                       <td>12 Jun 2024</td>
                     </tr>
                     <tr>
-                      
+
                       <td colSpan="5" style={{ textAlign: 'center', color: 'var(--gray-500)' }}>
                         No other dud cheques recorded in the last 5 years.
                       </td>
@@ -1548,7 +1603,7 @@ export default function CreditReport() {
 
           {/* AI credit summary narrative paragraph */}
           <div style={{ background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)', borderRadius: '12px', padding: '24px', marginBottom: '40px' }}>
-           {/* background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)',*/}
+            {/* background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)',*/}
             <p style={{ margin: '0 0 12px 0', fontWeight: 'bold', color: 'var(--gold-500)', fontSize: '1.2rem' }}>
               <span style={{ color: 'var(--gold-500)' }}>✦</span> AI Executive Narrative — For Relationship Manager Reference
             </p>
@@ -1559,7 +1614,7 @@ export default function CreditReport() {
               The primary risk signal is a slight spike in credit inquiries, which can indicate that the customer is seeking additional capital. Relationship managers must confirm whether any newly approved loans have been finalized before discounting new funds to prevent over-leverage. Identification audits and synthetic fraud screens are entirely verified and clean.
             </p>
             <p style={{ fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--gold-500)', margin: 0 }}>
-              <strong>Lending Recommendation:</strong> 
+              <strong>Lending Recommendation:</strong>
             </p>
             <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: 0 }}>
               APPROVE WITH CONDITIONS. Verify income statements and confirm competitors' outstanding debt margins prior to final disbursement. Implement monthly bureau automated event monitoring.
