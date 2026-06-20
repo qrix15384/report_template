@@ -502,8 +502,8 @@ export default function CreditReport() {
       style={{
         width: "35mm",
         height: "45mm",
-        background: "var(--gray-200, #e5e7eb)",
-        border: "2px dashed var(--gray-400, #9ca3af)",
+        background: "var(--green-100, #e5e7eb)",
+        border: "2px dashed var(--green-300, #9ca3af)",
         borderRadius: "2px",
         display: "flex",
         alignItems: "center",
@@ -519,8 +519,8 @@ export default function CreditReport() {
       style={{
         marginTop: "8px",
         fontSize: "0.75rem",
-        color: "var(--gray-500, #6b7280)",
-        fontStyle: "italic",
+        color: "var(--gray-950: #121212;)",
+        fontStyle: "strong",
         textAlign: "center",
       }}
     >
