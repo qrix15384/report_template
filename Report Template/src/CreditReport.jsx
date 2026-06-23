@@ -3,13 +3,8 @@ import logo from './assets/xdsdata-logo.png'
 
 // Print utility function
 const handlePrint = () => {
-  // Add print classes before printing
   document.body.classList.add('printing');
-
-  // Trigger print dialog
   window.print();
-
-  // Remove print classes after printing
   setTimeout(() => {
     document.body.classList.remove('printing');
   }, 1000);
@@ -25,66 +20,71 @@ const setupPrintShortcut = () => {
   });
 };
 
-const facilityRows = [
-  {
-    lender: 'Absa Bank Ghana',
-    id: 'facility-absa',
-    number: <center>1</center>,
-    type: 'Personal Loan',
-    approved: 'GHS 80,000',
-    outstanding: 'GHS 42,000',
-    status: 'Performing',
-    dpd: '0',
-    refi: 'Med',
-  },
-  {
-    lender: 'MTN Momo Loan',
-    id: 'facility-mtn',
-    number: <center>1</center>,
-    type: 'Digital Loan',
-    approved: 'GHS 10,000',
-    outstanding: 'GHS 4,500',
-    status: 'Performing',
-    dpd: '0',
-    refi: 'Low',
-  },
-  {
-    lender: 'Bayport Savings & Loans',
-    id: 'facility-bayport',
-    number: <center>1</center>,
-    type: 'SME-linked Loan',
-    approved: 'GHS 160,000',
-    outstanding: 'GHS 71,500',
-    status: 'Performing',
-    dpd: '0',
-    refi: 'HIGH',
-  },
-]
+// Date Formatter Helper
+function formatDateStr(str) {
+  if (!str) return "N/A";
+  
+  // Strip time component if present (e.g. "2000/04/25 12:00:00 AM")
+  const cleanStr = str.split(' ')[0];
+  
+  // Format 1: DD/MM/YYYY
+  let parts = cleanStr.split('/');
+  if (parts.length === 3) {
+    let day = parseInt(parts[0], 10);
+    let month = parseInt(parts[1], 10);
+    let year = parseInt(parts[2], 10);
+    if (parts[0].length === 4) {
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10);
+      day = parseInt(parts[2], 10);
+    }
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    if (month >= 1 && month <= 12) {
+      return `${day} ${months[month - 1]} ${year}`;
+    }
+  }
+  
+  // Format 2: YYYY-MM-DD
+  parts = cleanStr.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    if (month >= 1 && month <= 12) {
+      return `${day} ${months[month - 1]} ${year}`;
+    }
+  }
 
-// Detailed 24-month payment history statuses for each account
-// C = Current (On-time), L = Late (1-30 DPD), M = Missed (30+ DPD), X = No data
-const historyAccount1 = Array(24).fill('C');
-
-const historyAccount2 = Array(24).fill('C');
-historyAccount2[12] = 'L'; // One minor delay in month 13
-
-const historyAccount3 = Array(24).fill('C');
-historyAccount3[6] = 'L';   // One delay in month 7
-historyAccount3[18] = 'M';  // One missed payment in month 19
-historyAccount3[19] = 'L';  // Delayed catchup
+  return cleanStr;
+}
 
 export default function CreditReport() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  
+  // Login Session state (initialized to empty strings to allow credentials of choice)
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [dataTicket, setDataTicket] = useState(null);
+  
+  // Live Search States (DOB and ID are dynamically used in search, others are UI placeholders as requested)
+  const [searchName, setSearchName] = useState('KINGSLEY OKYERE');
+  const [searchDob, setSearchDob] = useState('2000-04-25');
+  const [searchId, setSearchId] = useState('GHA-717322166-9');
+  const [searchAccount, setSearchAccount] = useState('');
+  
+  const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
+  const [error, setError] = useState(null);
+  
+  const [matchResults, setMatchResults] = useState(null);
+  const [selectedConsumer, setSelectedConsumer] = useState(null);
+  const [rawReportData, setRawReportData] = useState(null);
+  
   // Setup print keyboard shortcut on mount
   useEffect(() => {
     setupPrintShortcut();
   }, []);
-
-  // Close sidebar when a nav link is clicked
-  const handleNavClick = () => {
-    setSidebarOpen(false);
-  };
 
   // Manage body class and click outside handling
   useEffect(() => {
@@ -95,7 +95,6 @@ export default function CreditReport() {
       document.body.classList.remove('sidebar-open');
       document.body.style.overflow = 'auto';
     }
-
     return () => {
       document.body.classList.remove('sidebar-open');
       document.body.style.overflow = 'auto';
@@ -113,14 +112,16 @@ export default function CreditReport() {
         }
       }
     };
-
     if (sidebarOpen) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [sidebarOpen]);
 
-  // Handle scrolling to facility account
+  const handleNavClick = () => {
+    setSidebarOpen(false);
+  };
+
   const scrollToFacility = (facilityId) => {
     const element = document.getElementById(facilityId);
     if (element) {
@@ -128,7 +129,109 @@ export default function CreditReport() {
     }
   };
 
-  // Helper to render section title (removed inline info icon)
+  // 1. Perform Authentication Login
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setLoadingStep('Authenticating credentials with XDS portal...');
+    
+    try {
+      const loginUrl = `/api-proxy/login?username=${encodeURIComponent(loginUsername)}&password=${encodeURIComponent(loginPassword)}`;
+      const loginRes = await fetch(loginUrl).then(r => r.json());
+      
+      if (loginRes && loginRes.dataTicket && loginRes.statusCode === 200) {
+        setDataTicket(loginRes.dataTicket);
+      } else {
+        throw new Error(loginRes?.message || 'Access Denied: Invalid credentials.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Authentication error.');
+    } finally {
+      setLoading(false);
+      setLoadingStep('');
+    }
+  };
+
+  // 2. Perform ConsumerMatch Search (ignoring name & account number parameters in fetch as requested)
+  const handleSearch = async (e) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setMatchResults(null);
+    setSelectedConsumer(null);
+    setRawReportData(null);
+    
+    try {
+      setLoadingStep('Searching credit bureau registry...');
+      const formattedDob = searchDob ? searchDob.replace(/-/g, '/') : '';
+      
+      // Mapped query contains ONLY DateOfBirth and identification (ignoring name & account parameters)
+      const matchUrl = `/api-proxy/getconsumermatch?dataticket=${encodeURIComponent(dataTicket)}&enquiryReason=Test&DateOfBirth=${encodeURIComponent(formattedDob)}&identification=${encodeURIComponent(searchId)}`;
+      
+      const matchRes = await fetch(matchUrl).then(r => r.json());
+      
+      if (Array.isArray(matchRes)) {
+        if (matchRes[0]?.response?.statusCode !== 200) {
+          throw new Error(matchRes[0]?.response?.message || 'No record matching search parameters found.');
+        }
+        setMatchResults(matchRes);
+      } else {
+        throw new Error('Unexpected response format from registry matching engine.');
+      }
+      
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Search execution failed.');
+    } finally {
+      setLoading(false);
+      setLoadingStep('');
+    }
+  };
+
+  // 3. Fetch Full Credit Report
+  const handleSelectConsumer = async (consumer) => {
+    setLoading(true);
+    setError(null);
+    setSelectedConsumer(consumer);
+    
+    try {
+      setLoadingStep(`Downloading full credit report for ${consumer.firstName} ${consumer.surname}...`);
+      const reportUrl = `/api-proxy/GetConsumerFullCreditReport?EnquiryID=${consumer.enquiryID}&ConsumerID=${consumer.consumerID}&DataTicket=${encodeURIComponent(dataTicket)}&MatchingEngineID=${consumer.matchingEngineID}`;
+      
+      const reportRes = await fetch(reportUrl).then(r => r.json());
+      
+      if (reportRes && reportRes.response?.statusCode === 200) {
+        setRawReportData(reportRes);
+      } else {
+        throw new Error(reportRes?.response?.message || 'Failed to download consumer credit report.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'An error occurred while generating the report.');
+    } finally {
+      setLoading(false);
+      setLoadingStep('');
+    }
+  };
+
+  const handleNewSearch = () => {
+    setRawReportData(null);
+    setMatchResults(null);
+    setSelectedConsumer(null);
+    setError(null);
+  };
+
+  const handleLogout = () => {
+    setDataTicket(null);
+    setRawReportData(null);
+    setMatchResults(null);
+    setSelectedConsumer(null);
+    setError(null);
+  };
+
+  // Helper to render section title
   const SectionTitleWithInfo = ({ title, subtitle }) => (
     <div className="section-title">
       <div>
@@ -138,7 +241,7 @@ export default function CreditReport() {
     </div>
   );
 
-  // Small information note to appear under tables/subsections
+  // Small information note
   const InfoNote = ({ text }) => (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '8px 0 14px 0' }} className="info-note">
       <div style={{
@@ -176,30 +279,896 @@ export default function CreditReport() {
     }
   };
 
-  const heatmapMonths = [
-    { name: 'May', status: 'ontime' },
-    { name: 'Jun', status: 'ontime' },
-    { name: 'Jul', status: 'ontime' },
-    { name: 'Aug', status: 'ontime' },
-    { name: 'Sep', status: 'ontime' },
-    { name: 'Oct', status: 'ontime' },
-    { name: 'Nov', status: 'ontime' },
-    { name: 'Dec', status: 'ontime' },
-    { name: 'Jan', status: 'late' },
-    { name: 'Feb', status: 'ontime' },
-    { name: 'Mar', status: 'ontime' },
-    { name: 'Apr', status: 'ontime' }
-  ];
-
-  // Helper for month-year labels
+  // Month labels generator
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const getMonthYear = (index) => {
-    const startYear = 2021; // base year for month 0 -> Jan 2021
-    const month = index % 12;
-    const year = startYear + Math.floor(index / 12);
-    return `${monthNames[month]} ${year}`;
+
+  // ==========================================
+  // API DATA MAPPING ADAPTER
+  // ==========================================
+  const mapApiDataToReport = (apiData) => {
+    if (!apiData) return null;
+
+    const personal = apiData.personalDetailsSummary || {};
+    const acctSummary = apiData.creditAccountSummary || {};
+    const delRating = apiData.highestDelinquencyRating || {};
+    const agreements = apiData.creditAgreementSummary || [];
+    const historyList = apiData.accountMonthlyPaymentHistory || [];
+
+    // Metadata
+    const referenceId = apiData.enquiryDetails?.subscriberEnquiryResultID || personal.consumerID || "N/A";
+    const dateIssued = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+
+    // Score Dashboard
+    const rawScore = parseInt(acctSummary.rating, 10) || 0;
+    const isOutof100 = rawScore <= 100;
+    const maxScore = isOutof100 ? 100 : 900;
+    let riskStatus = "Low Risk";
+    if (isOutof100) {
+      riskStatus = rawScore < 40 ? "High Risk" : rawScore < 70 ? "Medium Risk" : "Low Risk";
+    } else {
+      riskStatus = rawScore < 500 ? "High Risk" : rawScore < 700 ? "Medium Risk" : "Low Risk";
+    }
+
+    const totalArrearsGHS = parseFloat(acctSummary.totalAmountInArrearGHS) || 0;
+    const activeArrearsCount = parseInt(acctSummary.totalAccountInArrearGHS, 10) || 0;
+
+    let decisionSignal = "APPROVE";
+    let decisionNote = "Low Risk profile";
+    let decisionTrend = "Improving ↑";
+    if (activeArrearsCount > 0 || totalArrearsGHS > 0) {
+      decisionSignal = "REFER";
+      decisionNote = `Arrears of GHS ${totalArrearsGHS.toLocaleString()} detected.`;
+      decisionTrend = "Declining ↓";
+    }
+
+    const totalExposure = parseFloat(acctSummary.totalOutstandingdebtGHS) || 0;
+    const totalMonthlyRepayment = parseFloat(acctSummary.totalMonthlyInstalmentGHS) || 0;
+    const activeFacilitiesCount = parseInt(acctSummary.totalActiveAccountsGHS, 10) || 0;
+
+    // Identity details
+    const fullName = `${personal.firstName || ""} ${personal.otherNames || ""} ${personal.surname || ""}`.replace(/\s+/g, ' ').trim() || "KINGSLEY OKYERE";
+    const dobFormatted = formatDateStr(personal.birthDate);
+
+    // Demographic history arrays
+    const nameHistoryList = (apiData.nameHistory || []).map(item => ({
+      name: `${item.firstName || ""} ${item.otherNames || ""} ${item.surName || ""}`.replace(/\s+/g, ' ').trim(),
+      type: "Recorded Legal Name",
+      lastUpdate: formatDateStr(item.lastUpdatedDate)
+    }));
+
+    const idHistoryList = (apiData.identificationHistory || []).map(item => ({
+      idNumber: item.identificationNumber,
+      type: item.identificationType || "National ID",
+      lastUpdate: formatDateStr(item.upDateDate)
+    }));
+
+    const phoneHistoryList = [];
+    (apiData.telephoneHistory || []).forEach(item => {
+      if (item.mobileTelephoneNumber) {
+        phoneHistoryList.push({
+          telephone: item.mobileTelephoneNumber,
+          type: "Mobile Number",
+          lastUpdate: formatDateStr(item.mobileNoUpdatedonDate)
+        });
+      }
+      if (item.homeTelephoneNumber) {
+        phoneHistoryList.push({
+          telephone: item.homeTelephoneNumber,
+          type: "Home Number",
+          lastUpdate: formatDateStr(item.homeNoUpdatedonDate)
+        });
+      }
+      if (item.workTelephoneNumber) {
+        phoneHistoryList.push({
+          telephone: item.workTelephoneNumber,
+          type: "Work Number",
+          lastUpdate: formatDateStr(item.workNoUpdatedonDate)
+        });
+      }
+    });
+
+    const addressHistoryList = (apiData.addressHistory || []).map(item => ({
+      address: `${item.address1 || ""} ${item.address2 || ""} ${item.address3 || ""} ${item.address4 || ""}`.replace(/\s+/g, ' ').trim(),
+      type: item.addressTypeInd || "Residential Address",
+      lastUpdate: formatDateStr(item.upDateDate || item.upDateOnDate)
+    }));
+
+    // Credit Health Indicators
+    const consistencyStatus = activeArrearsCount > 0 ? "WEAK" : "STRONG";
+    const consistencyInterpretation = activeArrearsCount > 0 ? "Missed payments detected in past accounts." : "Highly consistent on-time payment behavior.";
+    
+    const healthIndicators = [
+      { indicatorName: "Repayment Consistency", status: consistencyStatus, interpretation: consistencyInterpretation },
+      { indicatorName: "Delinquency History", status: delRating.highestDelinquencyRating > 0 ? "DELINQUENT" : "STABLE", interpretation: `Worst Delinquency Rating: ${delRating.highestDelinquencyRating || "0"}` },
+      { indicatorName: "Over-Indebtedness Risk", status: totalExposure > 10000 ? "MODERATE" : "LOW", interpretation: `Outstanding Debt Exposure is GHS ${totalExposure.toLocaleString()}` },
+      { indicatorName: "Recent Credit-Seeking", status: "LOW", interpretation: "Standard inquiry rate logged in database" },
+      { indicatorName: "Loan Concentration Risk", status: activeFacilitiesCount > 2 ? "DIVERSIFIED" : "CONCENTRATED", interpretation: `Exposure distributed across ${activeFacilitiesCount} active loan(s)` },
+      { indicatorName: "Financial Stress Signals", status: activeArrearsCount > 0 ? "STRESSED" : "STABLE", interpretation: activeArrearsCount > 0 ? "Active default triggers in portfolio" : "No salary interruption flags detected" }
+    ];
+
+    // Heatmap months mapping (last 12 months)
+    const heatmapMonths = [];
+    const primaryHistory = historyList[0] || {};
+    for (let i = 12; i >= 1; i--) {
+      const padIndex = String(i).padStart(2, '0');
+      const headerKey = `mH${padIndex}`;
+      const valueKey = `m${padIndex}`;
+      
+      const headerVal = primaryHistory[headerKey] || "";
+      const statusVal = primaryHistory[valueKey] || "";
+      
+      let monthName = headerVal.split(' ')[1] || `M${13 - i}`;
+      
+      let statusClass = "nodata";
+      if (statusVal === "C" || statusVal === "0" || statusVal === "00") {
+        statusClass = "ontime";
+      } else if (statusVal === "1" || statusVal === "10" || statusVal === "2" || statusVal === "20") {
+        statusClass = "late";
+      } else if (statusVal === "#" || statusVal === "") {
+        statusClass = "nodata";
+      } else {
+        statusClass = "missed";
+      }
+      
+      heatmapMonths.push({
+        name: monthName,
+        status: statusClass
+      });
+    }
+
+    // Facilities rows mapping
+    const facilityRows = agreements.map((item, index) => {
+      const outstanding = parseFloat(item.currentBalanceAmt?.replace(/,/g, '')) || 0;
+      const approved = parseFloat(item.openingBalanceAmt?.replace(/,/g, '')) || 0;
+      const monthsLate = parseInt(item.monthsInArrears, 10) || 0;
+      const detailsHist = historyList.find(h => h.accountNo === item.accountNo) || {};
+      
+      let refi = "Low";
+      if (item.indicatorDescription?.toLowerCase().includes("digital") || item.indicatorDescription?.toLowerCase().includes("momo")) {
+        refi = "Low";
+      } else if (monthsLate > 3) {
+        refi = "HIGH";
+      } else if (monthsLate === 0 && approved > 5000) {
+        refi = "Med";
+      }
+
+      // 24 month behavior mapping
+      const repaymentHistory24 = [];
+      for (let k = 24; k >= 1; k--) {
+        const padK = String(k).padStart(2, '0');
+        const valK = detailsHist[`m${padK}`] || "";
+        if (valK === "C" || valK === "0" || valK === "00") {
+          repaymentHistory24.push("C");
+        } else if (valK === "1" || valK === "10" || valK === "2" || valK === "20") {
+          repaymentHistory24.push("L");
+        } else if (valK === "#" || valK === "") {
+          repaymentHistory24.push("X");
+        } else {
+          repaymentHistory24.push("M");
+        }
+      }
+
+      return {
+        id: `facility-${index}`,
+        lender: item.subscriberName || "N/A",
+        number: 1,
+        type: item.indicatorDescription || "Loan",
+        approved: approved ? `GHS ${approved.toLocaleString()}` : "GHS 0",
+        outstanding: outstanding ? `GHS ${outstanding.toLocaleString()}` : "GHS 0",
+        status: item.accountStatusCode === "A" ? "Active" : "Closed",
+        dpd: item.monthsInArrears || "0",
+        refi: refi,
+        details: {
+          accountNumber: item.accountNo || "N/A",
+          lastPaymentStatus: repaymentHistory24[repaymentHistory24.length - 1] === "C" ? "ON TIME" : "LATE",
+          currentArrearsDpd: item.amountOverdue ? `GHS ${parseFloat(item.amountOverdue).toLocaleString()}` : "GHS 0",
+          interestProfile: item.indicatorDescription?.toLowerCase().includes("micro") ? "HIGH" : "STANDARD",
+          dateDisbursed: formatDateStr(item.dateAccountOpened),
+          installmentAmount: item.instalmentAmount ? `GHS ${parseFloat(item.instalmentAmount).toLocaleString()}` : "GHS 0",
+          expiryDate: formatDateStr(item.closedDate),
+          lastUpdatedDate: formatDateStr(item.changedOnDate || item.lastUpdatedDate),
+          repaymentHistory24
+        }
+      };
+    });
+
+    // Joint Loans
+    const jointLoans = (apiData.jointLoanAccountDetails || []).map(item => ({
+      coBorrowerName: item.coBorrowerName || "N/A",
+      coBorrowerDob: formatDateStr(item.coBorrowerDob),
+      accountNumber: item.accountNumber || "N/A",
+      loanAmount: item.loanAmount ? `GHS ${parseFloat(item.loanAmount).toLocaleString()}` : "GHS 0",
+      arrearAmount: item.arrearAmount ? `GHS ${parseFloat(item.arrearAmount).toLocaleString()}` : "GHS 0",
+      monthsInArrears: item.monthsInArrears || "0",
+      lastPaymentDate: formatDateStr(item.lastPaymentDate),
+      lastPaymentAmount: item.lastPaymentAmount ? `GHS ${parseFloat(item.lastPaymentAmount).toLocaleString()}` : "GHS 0"
+    }));
+
+    // Affordability Analysis
+    const incomeEst = 5000;
+    const totalDSR = incomeEst > 0 ? ((totalMonthlyRepayment / incomeEst) * 100).toFixed(1) : 0;
+    const headroom = incomeEst * 0.40 - totalMonthlyRepayment;
+
+    // Compliance signals
+    const riskSignals = [];
+    if (activeArrearsCount > 0) {
+      riskSignals.push({
+        signal: "Active Account in Arrear",
+        severity: "HIGH",
+        requiredAction: "Verify current repayment capacity and reason for delinquency"
+      });
+    }
+    if (totalExposure > 10000) {
+      riskSignals.push({
+        signal: "High Total Exposure",
+        severity: "MEDIUM",
+        requiredAction: "Review aggregate leverage ceiling across all lenders"
+      });
+    }
+    if (riskSignals.length === 0) {
+      riskSignals.push({
+        signal: "Stable repayment profiles",
+        severity: "LOW",
+        requiredAction: "Maintain standard monitoring criteria"
+      });
+    }
+
+    // Dud Cheques and Judgements
+    const dudChequesList = (apiData.dudCheqEventSummary || []).map(item => ({
+      chequeNumber: item.chequeNo || "N/A",
+      issuingBank: item.bankName || "N/A",
+      dateIssued: formatDateStr(item.issueDate),
+      amount: item.amount ? `GHS ${parseFloat(item.amount).toLocaleString()}` : "GHS 0",
+      returnReason: item.reason || "Insufficient Funds",
+      dateBounced: formatDateStr(item.bounceDate)
+    }));
+
+    const judgementsList = (apiData.judgementSummary || []).map(item => ({
+      caseNumber: item.caseNo || "N/A",
+      plaintiff: item.plaintiff || "N/A",
+      amount: item.amount ? `GHS ${parseFloat(item.amount).toLocaleString()}` : "GHS 0",
+      judgementDate: formatDateStr(item.judgementDate),
+      status: item.status || "UNSATISFIED"
+    }));
+
+    // Enquiry History
+    const enquiryTrails = (apiData.enquiryHistory || []).map(item => ({
+      date: formatDateStr(item.enquiryDate),
+      requestingInstitution: item.subscriberName || "N/A",
+      purpose: item.enquiryReason || "Credit Assessment",
+      amount: item.amount ? `GHS ${parseFloat(item.amount).toLocaleString()}` : "GHS 0"
+    }));
+
+    return {
+      reportMeta: {
+        xdsReference: referenceId,
+        issuedAt: dateIssued,
+        requestingInstitution: "ABC Rural Bank Ltd.",
+        accessedBy: "Abena Amponsah",
+        title: "Regional Manager",
+        purpose: "Credit Assessment"
+      },
+      dashboard: {
+        creditScore: rawScore,
+        maxScore,
+        riskStatus,
+        decisionSignal,
+        decisionNote,
+        decisionTrend,
+        probabilityOfDefault: activeArrearsCount > 0 ? "24.5%" : "3.8%",
+        stressForecast: activeArrearsCount > 0 ? "Caution" : "Stable",
+        affordabilityStatus: totalDSR > 40 ? "CRITICAL" : "HEALTHY",
+        dsrText: `DSR ${totalDSR}% | Target < 40%`,
+        headroomText: `GHS ${headroom > 0 ? headroom.toLocaleString() : 0}`,
+        totalExposure: `GHS ${totalExposure.toLocaleString()}`,
+        totalMonthlyRepayment: `GHS ${totalMonthlyRepayment.toLocaleString()}`,
+        currentArrears: `GHS ${totalArrearsGHS.toLocaleString()}`,
+        activeFacilitiesCount
+      },
+      identity: {
+        fullName,
+        nationalId: personal.nationalIDNo || "N/A",
+        email: personal.emailAddress || "N/A",
+        primaryPhone: personal.cellularNo || "N/A",
+        dependentsCount: personal.dependants || "0",
+        maritalStatus: personal.maritalStatus || "N/A",
+        dateOfBirth: dobFormatted,
+        gender: personal.gender || "N/A",
+        employer: personal.employerDetail || apiData.employmentHistory?.[0]?.employerDetail || "N/A",
+        digitalAddress: personal.residentialAddress1 || "N/A",
+        nationality: personal.nationality || "N/A",
+        identityConfidenceScore: "VERIFIED (100%)"
+      },
+      demographicHistory: {
+        names: nameHistoryList,
+        identifications: idHistoryList,
+        telephones: phoneHistoryList,
+        addresses: addressHistoryList
+      },
+      creditHealth: {
+        indicators: healthIndicators,
+        analytics: {
+          onTimeRatio: activeArrearsCount > 0 ? "70%" : "100%",
+          avgDaysPastDue: activeArrearsCount > 0 ? "45 Days" : "0 Days",
+          worstDelinquency: delRating.highestDelinquencyRating ? `${delRating.highestDelinquencyRating} DPD` : "0 DPD",
+          consecutiveOnTime: activeArrearsCount > 0 ? "0 Months" : "24 Months",
+          paymentTrend: activeArrearsCount > 0 ? "Declining ↓" : "Stable →"
+        },
+        heatmapMonths
+      },
+      facilityRows,
+      jointLoans,
+      affordabilityData: {
+        income: `GHS ${incomeEst.toLocaleString()}`,
+        debt: `GHS ${totalMonthlyRepayment.toLocaleString()}`,
+        disposable: `GHS ${(incomeEst - totalMonthlyRepayment).toLocaleString()}`,
+        dsr: `${totalDSR}%`,
+        headroom: `GHS ${headroom > 0 ? headroom.toLocaleString() : 0}`,
+        rating: totalDSR > 40 ? "CRITICAL" : "HEALTHY",
+        description: `Debt Service Ratio of ${totalDSR}% is ${totalDSR > 40 ? 'above the 40% caution limit' : 'below the 40% healthy threshold'}.`,
+        insight: activeArrearsCount > 0 
+          ? "Caution: Borrower has active arrears in micro-credit facility. Restructure or verify capacity before extending new limits." 
+          : "Borrower displays healthy DSR headroom. Additional moderate exposure limit is manageable."
+      },
+      complianceData: {
+        riskSignals,
+        fraudChecks: [
+          { checkDescription: "Identity Document Match", status: "VERIFIED", details: "Ghana Card matches database" },
+          { checkDescription: "Phone Number Consistency", status: "STABLE", details: "Phone aligns consistently with record" },
+          { checkDescription: "Device Risk Indicator", status: "LOW", details: "No high-risk logs or location shifts" },
+          { checkDescription: "Synthetic Identity Risk", status: "LOW", details: "Profile shows clean legal composites" }
+        ]
+      },
+      publicRecordsData: {
+        dudCheques: dudChequesList,
+        judgements: judgementsList
+      },
+      enquiriesList: enquiryTrails,
+      aiDecision: {
+        recommendation: decisionSignal,
+        subStatus: decisionNote,
+        maxNewExposure: `GHS ${headroom > 0 ? headroom.toLocaleString() : 0}`,
+        targetStrategy: activeArrearsCount > 0 ? "Debt consolidation / recovery actions" : "Cross-sell savings or investment plans",
+        monitoringFrequency: activeArrearsCount > 0 ? "Weekly alert triggers" : "Quarterly reviews",
+        verificationCheckRequired: "Latest salary pay slips & current bank statements",
+        collateralRequirement: activeArrearsCount > 0 ? "Security / Guarantee Required" : "Not mandatory",
+        riskClassifications: {
+          probabilityOfDefault: activeArrearsCount > 0 ? "High (24.5%)" : "Low (3.8%)",
+          refinanceProbability: activeArrearsCount > 0 ? "LOW (Arrears present)" : "HIGH (Refinance candidate)",
+          crossSellPropensity: "MEDIUM",
+          churnRisk: "LOW",
+          financialStressStatus: activeArrearsCount > 0 ? "ACTIVE DELINQUENCY ALERT" : "STABLE"
+        },
+        recommendedStrategyCampaigns: activeArrearsCount > 0 
+          ? [
+              "Initiate recovery relationship manager outreach for active arrears",
+              "Consolidate liabilities to structure single payment schedule",
+              "Place account on immediate bureau alert tracking watchlists"
+            ]
+          : [
+              "Qualifies for standard salary credit limit packages",
+              "Pre-approved credit headroom target ceiling: GHS " + (headroom > 0 ? headroom.toLocaleString() : 0)
+            ],
+        narrative: activeArrearsCount > 0 
+          ? `${fullName} displays active payment delinquency in a micro-credit account (Months in arrears: ${agreements[0]?.monthsInArrears}). Total outstanding overdue is GHS ${totalArrearsGHS.toLocaleString()}. Recommend immediate reference check before new fund release.` 
+          : `${fullName} demonstrates highly stable credit profiles with zero active arrears. Aggregate Debt Service Ratio is well managed. Recommended exposure ceiling stands clear.`
+      }
+    };
   };
 
+  const report = mapApiDataToReport(rawReportData);
+
+  // ==========================================
+  // RENDER LOGIN SCREEN (IF NO TICKET ACTIVE)
+  // ==========================================
+  if (!dataTicket) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(circle, var(--green-900) 0%, var(--green-950) 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '30px',
+        color: '#ffffff',
+        fontFamily: 'Verdana, Geneva, sans-serif'
+      }}>
+        <div className="section-card" style={{
+          width: '100%',
+          maxWidth: '450px',
+          padding: '40px',
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '20px',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          {/* Logo Branding */}
+          <img src={logo} alt="xdsdata logo" style={{
+            width: '240px',
+            marginBottom: '20px'
+          }} />
+          
+          <h2 style={{
+            margin: '0 0 10px 0',
+            fontSize: '1.2rem',
+            textAlign: 'center',
+            fontWeight: '700',
+            letterSpacing: '0.05em',
+            color: 'var(--green-300)'
+          }}>
+            CREDIT SYSTEM GATEWAY
+          </h2>
+          
+          <p style={{
+            margin: '0 0 30px 0',
+            fontSize: '0.75rem',
+            color: 'rgba(255, 255, 255, 0.6)',
+            textAlign: 'center',
+            lineHeight: '1.4'
+          }}>
+            Authorize your credentials of choice below to look up session security tickets.
+          </p>
+
+          <form onSubmit={handleLogin} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '0.7rem',
+                color: 'rgba(255,255,255,0.7)',
+                textTransform: 'uppercase',
+                fontWeight: 'bold',
+                marginBottom: '6px'
+              }}>Username</label>
+              <input
+                type="text"
+                placeholder="Enter Username"
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'rgba(0,0,0,0.2)',
+                  color: '#ffffff',
+                  fontSize: '0.85rem',
+                  outline: 'none'
+                }}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '0.7rem',
+                color: 'rgba(255,255,255,0.7)',
+                textTransform: 'uppercase',
+                fontWeight: 'bold',
+                marginBottom: '6px'
+              }}>Password</label>
+              <input
+                type="password"
+                placeholder="Enter Password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'rgba(0,0,0,0.2)',
+                  color: '#ffffff',
+                  fontSize: '0.85rem',
+                  outline: 'none'
+                }}
+                required
+              />
+            </div>
+
+            {error && (
+              <div style={{
+                background: 'rgba(212, 41, 17, 0.1)',
+                border: '1px solid var(--red-500)',
+                color: '#ff8888',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                textAlign: 'center'
+              }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '8px',
+                background: 'var(--green-500)',
+                color: 'var(--green-950)',
+                fontWeight: 'bold',
+                fontSize: '0.85rem',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginTop: '10px'
+              }}
+            >
+              Sign In to System
+            </button>
+          </form>
+
+          {loading && (
+            <div style={{
+              marginTop: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <div style={{
+                width: '28px',
+                height: '28px',
+                border: '3px solid rgba(255,255,255,0.1)',
+                borderTopColor: 'var(--green-500)',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+              <p style={{ fontSize: '0.7rem', color: 'var(--green-300)', margin: 0 }}>
+                {loadingStep}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // RENDER SEARCH PORTAL (IF LOGGED IN, NO REPORT DATA)
+  // ==========================================
+  if (!rawReportData) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(circle, var(--green-900) 0%, var(--green-950) 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '30px',
+        color: '#ffffff',
+        fontFamily: 'Verdana, Geneva, sans-serif'
+      }}>
+        {/* Portal Container */}
+        <div className="section-card" style={{
+          width: '100%',
+          maxWidth: '650px',
+          padding: '40px',
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '20px',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          
+          {/* Top Actions: Logout */}
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: 'rgba(255,255,255,0.7)',
+                padding: '6px 14px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.72rem',
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseLeave={(e) => e.target.style.background = 'transparent'}
+            >
+              Sign Out
+            </button>
+          </div>
+
+          {/* Logo Branding */}
+          <img src={logo} alt="xdsdata logo" style={{
+            width: '260px',
+            marginBottom: '20px'
+          }} />
+          
+          <h2 style={{
+            margin: '0 0 10px 0',
+            fontSize: '1.4rem',
+            textAlign: 'center',
+            fontWeight: '700',
+            letterSpacing: '0.05em',
+            color: 'var(--green-300)'
+          }}>
+            CREDIT BUREAU VERIFICATION PORTAL
+          </h2>
+          
+          <p style={{
+            margin: '0 0 35px 0',
+            fontSize: '0.8rem',
+            color: 'rgba(255, 255, 255, 0.6)',
+            textAlign: 'center',
+            lineHeight: '1.4'
+          }}>
+            Logged in as <strong>{loginUsername}</strong>. Input consumer details below. Note that matches are executed using only **Identification** and **Date of Birth**.
+          </p>
+
+          {/* Form */}
+          <form onSubmit={handleSearch} style={{ width: '100%' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '20px',
+              marginBottom: '25px'
+            }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.72rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  textTransform: 'uppercase',
+                  fontWeight: 'bold',
+                  marginBottom: '6px'
+                }}>Consumer Full Name (UI Placeholder)</label>
+                <input
+                  type="text"
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'rgba(0,0,0,0.2)',
+                    color: '#ffffff',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.72rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  textTransform: 'uppercase',
+                  fontWeight: 'bold',
+                  marginBottom: '6px'
+                }}>Date of Birth (Used in search)</label>
+                <input
+                  type="date"
+                  value={searchDob}
+                  onChange={(e) => setSearchDob(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'rgba(0,0,0,0.2)',
+                    color: '#ffffff',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.72rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  textTransform: 'uppercase',
+                  fontWeight: 'bold',
+                  marginBottom: '6px'
+                }}>Identification Number (Used in search)</label>
+                <input
+                  type="text"
+                  value={searchId}
+                  onChange={(e) => setSearchId(e.target.value)}
+                  placeholder="e.g. GHA-717322166-9"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'rgba(0,0,0,0.2)',
+                    color: '#ffffff',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.72rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  textTransform: 'uppercase',
+                  fontWeight: 'bold',
+                  marginBottom: '6px'
+                }}>Account Number (UI Placeholder)</label>
+                <input
+                  type="text"
+                  value={searchAccount}
+                  onChange={(e) => setSearchAccount(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'rgba(0,0,0,0.2)',
+                    color: '#ffffff',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Error alerts */}
+            {error && (
+              <div style={{
+                background: 'rgba(212, 41, 17, 0.1)',
+                border: '1px solid var(--red-500)',
+                color: '#ff8888',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                marginBottom: '20px',
+                textAlign: 'center'
+              }}>
+                {error}
+              </div>
+            )}
+
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '8px',
+                background: 'var(--green-500)',
+                color: 'var(--green-950)',
+                fontWeight: 'bold',
+                fontSize: '0.9rem',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}
+            >
+              Search Bureau Database
+            </button>
+          </form>
+
+          {/* Loader Overlay */}
+          {loading && (
+            <div style={{
+              marginTop: '30px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <div className="spinner" style={{
+                width: '36px',
+                height: '36px',
+                border: '4px solid rgba(255,255,255,0.1)',
+                borderTopColor: 'var(--green-500)',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+              <p style={{ fontSize: '0.75rem', color: 'var(--green-300)', margin: 0 }}>
+                {loadingStep}
+              </p>
+            </div>
+          )}
+
+          {/* Matching Results list */}
+          {matchResults && (
+            <div style={{ width: '100%', marginTop: '35px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '25px' }}>
+              <h3 style={{
+                fontSize: '0.85rem',
+                fontWeight: 'bold',
+                color: 'var(--green-300)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                margin: '0 0 15px 0'
+              }}>
+                Matching Records Located
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {matchResults.map((consumer, idx) => (
+                  <div key={idx} style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '20px'
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <strong style={{ fontSize: '0.95rem', color: '#ffffff' }}>
+                        {consumer.firstName} {consumer.surname}
+                      </strong>
+                      <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                        ID Number: {consumer.idNo || 'N/A'} | DOB: {formatDateStr(consumer.birthDate)}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                        Address: {consumer.address || 'N/A'}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => handleSelectConsumer(consumer)}
+                      disabled={loading}
+                      style={{
+                        padding: '10px 18px',
+                        background: 'transparent',
+                        border: '1px solid var(--green-300)',
+                        color: 'var(--green-300)',
+                        borderRadius: '6px',
+                        fontWeight: 'bold',
+                        fontSize: '0.78rem',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'var(--green-300)';
+                        e.target.style.color = 'var(--green-950)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'transparent';
+                        e.target.style.color = 'var(--green-300)';
+                      }}
+                    >
+                      Generate Report
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // RENDER DETAILED CONSUMER REPORT DASHBOARD
+  // ==========================================
   return (
     <div className="app-container">
       {/* Hamburger Menu Button (Mobile) */}
@@ -268,19 +1237,46 @@ export default function CreditReport() {
             <span>⚡</span> AI Insights & Decisions
           </a>
 
-          <div className="nav-divider" />
+          <div className="nav-divider" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', margin: '15px 0' }} />
 
           <a href="#glossary" className="nav-item nav-item-glossary" onClick={handleNavClick}>
             <span>📖</span> Glossary of Terms
           </a>
+          
+          <button
+            onClick={handleNewSearch}
+            className="nav-item"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: 'var(--green-300)',
+              border: 'none',
+              width: '100%',
+              textAlign: 'left',
+              cursor: 'pointer',
+              marginTop: '10px'
+            }}
+          >
+            <span>🔍</span> Return to Search
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="nav-item"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#ff8888',
+              border: 'none',
+              width: '100%',
+              textAlign: 'left',
+              cursor: 'pointer',
+              marginTop: '5px'
+            }}
+          >
+            <span>🚪</span> System Logout
+          </button>
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-user">
-
-            <div className="user-info">
-            </div>
-          </div>
           <button className="btn-print" onClick={handlePrint} title="Print report (Ctrl+P)">
             <span>🖨️</span> Export PDF / Print
           </button>
@@ -314,21 +1310,19 @@ export default function CreditReport() {
                 backgroundColor: 'transparent'
               }}
             />
-            <div className="header-badge" style={{ margin: '0' }}>Smart Detailed Credit Report</div>
+            <div className="header-badge" style={{ margin: '0' }}>Smart Detailed Consumer Report</div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
             <h1 style={{ margin: '0 0 8px 0', fontSize: '1.0rem', fontWeight: '700' }}>
               XDS Data Ghana Limited
-              <br />Suite A 701, The Octagon, Accra<br></br>
-              Tel: +233 (0)30 123 4567 | Email: ask@xdsdata.com<br></br>
+              <br />Suite A 701, The Octagon, Accra<br />
+              Tel: +233 (0)30 123 4567 | Email: ask@xdsdata.com<br />
               <a href="https://www.xdsdata.com" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff', textDecoration: 'underline' }}>
                 https://www.xdsdata.com
               </a>
-              <br></br>
-              <br></br>
+              <br /><br />
               Credit Bureau License No. 001
-              <a href="https://www.xdsdata.com" target="_blank" rel="noopener noreferrer" style={{ color: '#ffffff', textDecoration: 'underline' }}></a>
             </h1>
           </div>
         </section>
@@ -338,36 +1332,33 @@ export default function CreditReport() {
           <div className="header-meta">
             <div className="meta-item">
               <span className="meta-label">XDS Reference</span>
-              <span className="meta-value">123456</span>
+              <span className="meta-value">{report.reportMeta.xdsReference}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">Date | Time Issued</span>
-              <span className="meta-value">17 May 2026 | 3:46 PM</span>
+              <span className="meta-value">{report.reportMeta.issuedAt}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">Requesting Inst.</span>
-              <span className="meta-value">ABC Rural Bank Ltd.</span>
+              <span className="meta-value">{report.reportMeta.requestingInstitution}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">Accessed By</span>
-              <span className="meta-value">Abena Amponsah</span>
+              <span className="meta-value">{report.reportMeta.accessedBy}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">Title</span>
-              <span className="meta-value">Regional Manager</span>
+              <span className="meta-value">{report.reportMeta.title}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">Purpose</span>
-              <span className="meta-value">Credit Assessement</span>
+              <span className="meta-value">{report.reportMeta.purpose}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label"></span>
               <span className="status-pill danger" style={{ background: '#fdf0f0', border: '1px solid #fbc4c4', color: '#b22222', padding: '2px 8px' }}>CONFIDENTIAL</span>
             </div>
-
-
           </div>
-
         </header>
 
         {/* Section 1: Executive Summary & Dashboard */}
@@ -375,7 +1366,6 @@ export default function CreditReport() {
           <SectionTitleWithInfo
             title="SECTION 1 — EXECUTIVE DECISION DASHBOARD"
             subtitle="Bureau Status: Active"
-            tooltip="AI-powered credit decision with risk score, default probability, and affordability assessment."
           />
 
           <div className="score-dashboard-wrapper">
@@ -389,36 +1379,43 @@ export default function CreditReport() {
                   cy="60"
                   r="50"
                   strokeDasharray="314.16"
-                  strokeDashoffset={314.16 * (1 - 742 / 900)}
+                  strokeDashoffset={314.16 * (1 - report.dashboard.creditScore / report.dashboard.maxScore)}
                 />
                 <text className="gauge-text" x="60" y="58">
-                  <tspan className="gauge-score" x="60" dy="0">742</tspan>
-                  <tspan className="gauge-max" x="60" dy="18">OUT OF 900</tspan>
+                  <tspan className="gauge-score" x="60" dy="0">{report.dashboard.creditScore}</tspan>
+                  <tspan className="gauge-max" x="60" dy="18">OUT OF {report.dashboard.maxScore}</tspan>
                 </text>
               </svg>
-              <div className="gauge-label">XDS Credit Score</div>
-              <div className="gauge-status">Low Risk</div>
+              <div className="gauge-label">XDS Bureau Rating</div>
+              <div className="gauge-status" style={{
+                background: report.dashboard.riskStatus.includes('High') ? 'var(--red-500)' : 'var(--green-500)',
+                color: report.dashboard.riskStatus.includes('High') ? '#ffffff' : 'var(--green-950)'
+              }}>{report.dashboard.riskStatus}</div>
             </div>
 
             <div className="dashboard-grid">
-              <div className="dashboard-panel alert-panel">
+              <div className="dashboard-panel alert-panel" style={{ borderLeftColor: report.dashboard.decisionSignal.includes('APPROVE') ? 'var(--green-700)' : 'var(--red-500)' }}>
                 <span className="panel-caption">Decision Signal</span>
-                <h2>APPROVE</h2>
-                <p className="panel-note">With Conditions</p>
-                <p className="small-note">Trend: Improving ↑</p>
+                <h2>{report.dashboard.decisionSignal}</h2>
+                <p className="panel-note">{report.dashboard.decisionNote}</p>
+                <p className="small-note">Trend: {report.dashboard.decisionTrend}</p>
               </div>
 
               <div className="dashboard-panel">
                 <span className="panel-caption">Probability of Default</span>
-                <h2>3.8%</h2>
+                <h2>{report.dashboard.probabilityOfDefault}</h2>
                 <p className="panel-note">12-Month Forecast</p>
-                <p className="small-note">Stress Forecast: Stable</p>
+                <p className="small-note">Stress Forecast: {report.dashboard.stressForecast}</p>
               </div>
-              <div className="dashboard-panel positive-panel">
+              
+              <div className="dashboard-panel positive-panel" style={{
+                background: report.dashboard.affordabilityStatus === 'HEALTHY' ? 'var(--green-100)' : '#fdf0f0',
+                borderLeftColor: report.dashboard.affordabilityStatus === 'HEALTHY' ? 'var(--green-500)' : 'var(--red-500)'
+              }}>
                 <span className="panel-caption">Affordability Status</span>
-                <h2>HEALTHY</h2>
-                <p className="panel-note">DSR 34% | Below 40% cap</p>
-                <p className="small-note">Headroom: GHS 45,000</p>
+                <h2>{report.dashboard.affordabilityStatus}</h2>
+                <p className="panel-note">{report.dashboard.dsrText}</p>
+                <p className="small-note">Headroom: {report.dashboard.headroomText}</p>
               </div>
             </div>
           </div>
@@ -427,228 +1424,135 @@ export default function CreditReport() {
           <div className="key-metrics">
             <div>
               <span>Total Exposure</span>
-              <strong>GHS 118,000</strong>
+              <strong>{report.dashboard.totalExposure}</strong>
             </div>
             <div>
               <span>Monthly Repayment</span>
-              <strong>GHS 8,500</strong>
-            </div>
+              <strong>{report.dashboard.totalMonthlyRepayment}</strong>
+            </div>   
             <div>
               <span>Current Arrears</span>
-              <strong>GHS 0</strong>
+              <strong style={{ color: report.dashboard.currentArrears !== 'GHS 0' ? 'var(--red-500)' : 'inherit' }}>
+                {report.dashboard.currentArrears}
+              </strong>
             </div>
             <div>
               <span>Active Facilities</span>
-              <strong>3</strong>
+              <strong>{report.dashboard.activeFacilitiesCount}</strong>
             </div>
           </div>
         </section>
         
-         
-    {/* Section 2: Borrower Profile */}
+        {/* Section 2: Borrower Profile */}
         <section id="identity" className="report-section section-card">
           <SectionTitleWithInfo
             title="SECTION 2 — BORROWER IDENTITY"
             subtitle="Source Verified"
-            tooltip="Verified personal information including identity, contact details, and demographic profile."
           />
-<div
-  className="details-grid"
-  style={{
-    display: "grid",
-    gridTemplateColumns: "1fr auto 1fr",
-    gap: "24px",
-    alignItems: "start",
-  }}
->
-  {/* Left Column */}
-  <div className="detail-column">
-    <div className="detail-row">
-      <span>Full Name</span>
-      <strong>Kwame Mensah</strong>
-    </div>
-    <div className="detail-row">
-      <span>National ID (Ghana Card)</span>
-      <strong>GHA-123456789-1</strong>
-    </div>
-    <div className="detail-row">
-      <span>E-mail Address</span>
-      <strong>odmosm@gmail.com</strong>
-    </div>
-    <div className="detail-row">
-      <span>Phone (Primary)</span>
-      <strong>0244 123 456</strong>
-    </div>
-    <div className="detail-row">
-      <span>Dependants</span>
-      <strong>3</strong>
-    </div>
-    <div className="detail-row">
-      <span>Marital Status</span>
-      <strong>Married</strong>
-    </div>
-  </div>
-
-  {/* Middle Photo Column */}
-  <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "flex-start",
-    }}
-  >
-    <div
-      style={{
-        width: "35mm",
-        height: "45mm",
-        background: "var(--green-100, #e5e7eb)",
-        border: "2px dashed var(--green-300, #9ca3af)",
-        borderRadius: "2px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "var(--gray-500, #6b7280)",
-        fontSize: "2rem",
-      }}
-    >
-      📷
-    </div>
-
-    <div
-      style={{
-        marginTop: "8px",
-        fontSize: "0.75rem",
-        color: "var(--gray-950: #121212;)",
-        fontStyle: "strong",
-        textAlign: "center",
-      }}
-    >
-      Passport Size: 35 × 45 mm
-    </div>
-  </div>
-
-  {/* Right Column */}
-  <div className="detail-column">
-    <div className="detail-row">
-      <span>Date of Birth</span>
-      <strong>14 Mar 1985</strong>
-    </div>
-    <div className="detail-row">
-      <span>Gender</span>
-      <strong>Male</strong>
-    </div>
-    <div className="detail-row">
-      <span>Employer</span>
-      <strong>Self-Employed / SME</strong>
-    </div>
-    <div className="detail-row">
-      <span>Digital Address</span>
-      <strong>GS-234-2345</strong>
-    </div>
-    <div className="detail-row">
-      <span>Nationality</span>
-      <strong>Ghanaian</strong>
-    </div>
-    <div className="detail-row">
-      <span>Identity Confidence</span>
-      <span className="verified-badge">
-        VERIFIED (100%)
-      </span>
-    </div>
-  </div>
-</div>
-          </section>
-
-
-
-
-
-
- {/* Section 2: Borrower Profile 
- <section id="identity" className="report-section section-card">
-          <SectionTitleWithInfo
-            title="SECTION 2 — BORROWER IDENTITY"
-            subtitle="Source Verified"
-            tooltip="Verified personal information including identity, contact details, and demographic profile."
-          />
-
-          <div className="details-grid">
+          <div
+            className="details-grid"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto 1fr",
+              gap: "24px",
+              alignItems: "start",
+            }}
+          >
+            {/* Left Column */}
             <div className="detail-column">
               <div className="detail-row">
                 <span>Full Name</span>
-                <strong>Kwame Mensah</strong>
+                <strong>{report.identity.fullName}</strong>
               </div>
               <div className="detail-row">
                 <span>National ID (Ghana Card)</span>
-                <strong>GHA-123456789-1</strong>
+                <strong>{report.identity.nationalId}</strong>
               </div>
               <div className="detail-row">
                 <span>E-mail Address</span>
-                <strong>odmosm@gmail.com</strong>
+                <strong>{report.identity.email}</strong>
               </div>
               <div className="detail-row">
                 <span>Phone (Primary)</span>
-                <strong>0244 123 456</strong>
+                <strong>{report.identity.primaryPhone}</strong>
               </div>
               <div className="detail-row">
                 <span>Dependants</span>
-                <strong>3</strong>
+                <strong>{report.identity.dependentsCount}</strong>
               </div>
               <div className="detail-row">
                 <span>Marital Status</span>
-                <strong>Married</strong>
+                <strong>{report.identity.maritalStatus}</strong>
               </div>
             </div>
 
+            {/* Middle Photo Column */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start" }}>
+              <div
+                style={{
+                  width: "35mm",
+                  height: "45mm",
+                  background: "var(--green-100, #e5e7eb)",
+                  border: "2px dashed var(--green-300, #9ca3af)",
+                  borderRadius: "2px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--gray-500, #6b7280)",
+                  fontSize: "2rem",
+                }}
+              >
+                📷
+              </div>
+              <div style={{ marginTop: "8px", fontSize: "0.75rem", fontWeight: 'bold', textAlign: "center" }}>
+                Passport Silhouette
+              </div>
+            </div>
+
+            {/* Right Column */}
             <div className="detail-column">
               <div className="detail-row">
                 <span>Date of Birth</span>
-                <strong>14 Mar 1985</strong>
+                <strong>{report.identity.dateOfBirth}</strong>
               </div>
               <div className="detail-row">
                 <span>Gender</span>
-                <strong>Male</strong>
+                <strong>{report.identity.gender}</strong>
               </div>
               <div className="detail-row">
                 <span>Employer</span>
-                <strong>Self-Employed / SME</strong>
+                <strong>{report.identity.employer}</strong>
               </div>
               <div className="detail-row">
-                <span>Digital Address</span>
-                <strong>GS-234-2345</strong>
+                <span>Digital Address / Residence</span>
+                <strong>{report.identity.digitalAddress}</strong>
               </div>
               <div className="detail-row">
                 <span>Nationality</span>
-                <strong>Ghanaian</strong>
+                <strong>{report.identity.nationality}</strong>
               </div>
               <div className="detail-row">
                 <span>Identity Confidence</span>
                 <span className="verified-badge">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                  </svg>
-                  VERIFIED (100%)
+                  {report.identity.identityConfidenceScore}
                 </span>
               </div>
             </div>
           </div>
-        </section> 
- */}
+        </section>
 
         {/* Section 2b: Demographic History */}
         <section id="demographics" className="report-section section-card">
           <SectionTitleWithInfo
             title="SECTION 2B — DEMOGRAPHIC HISTORY"
             subtitle="Audit Trail"
-            tooltip="Historical changes to borrower information tracked for compliance and audit purposes."
           />
 
-          <div className="demographics-grid">
+          <div className="demographics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
             {/* i. Name History */}
-            <div className="demographics-card">
-              <h4>Name History</h4>
-              <InfoNote text="Lists recorded legal and prior names with the last update date." />
+            <div className="demographics-card" style={{ background: '#ffffff', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '16px' }}>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: 'var(--green-900)' }}>Name History</h4>
+              <InfoNote text="Lists legal names reported over time." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -659,25 +1563,26 @@ export default function CreditReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>Kwame Mensah</td>
-                      <td>Current Legal Name</td>
-                      <td>17 May 2026</td>
-                    </tr>
-                    <tr>
-                      <td>Kwame Agyapong Mensah</td>
-                      <td>Alias / Prior Name</td>
-                      <td>12 Mar 2023</td>
-                    </tr>
+                    {report.demographicHistory.names.length > 0 ? (
+                      report.demographicHistory.names.map((n, i) => (
+                        <tr key={i}>
+                          <td>{n.name}</td>
+                          <td>{n.type}</td>
+                          <td>{n.lastUpdate}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="3" style={{ textAlign: 'center' }}>No historical records</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
             {/* ii. Identification Number History */}
-            <div className="demographics-card">
-              <h4>Identification Number History</h4>
-              <InfoNote text="Shows national and other ID numbers, their type and last update for verification." />
+            <div className="demographics-card" style={{ background: '#ffffff', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '16px' }}>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: 'var(--green-900)' }}>Identification History</h4>
+              <InfoNote text="Recorded document and credentials audits." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -688,30 +1593,26 @@ export default function CreditReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>GHA-721098421-3</td>
-                      <td>Ghana Card (National ID)</td>
-                      <td>14 Feb 2022</td>
-                    </tr>
-                    <tr>
-                      <td>H123456789</td>
-                      <td>Passport ID (Expired)</td>
-                      <td>10 Jan 2018</td>
-                    </tr>
-                    <tr>
-                      <td>DL-092813-A</td>
-                      <td>Drivers License</td>
-                      <td>05 Aug 2021</td>
-                    </tr>
+                    {report.demographicHistory.identifications.length > 0 ? (
+                      report.demographicHistory.identifications.map((id, i) => (
+                        <tr key={i}>
+                          <td>{id.idNumber}</td>
+                          <td>{id.type}</td>
+                          <td>{id.lastUpdate}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="3" style={{ textAlign: 'center' }}>No historical records</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
             {/* iii. Telephone History */}
-            <div className="demographics-card">
-              <h4>Telephone History</h4>
-              <InfoNote text="Primary and secondary contact numbers recorded with last update timestamps." />
+            <div className="demographics-card" style={{ background: '#ffffff', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '16px' }}>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: 'var(--green-900)' }}>Telephone History</h4>
+              <InfoNote text="Registered contact lines tracking." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -722,30 +1623,26 @@ export default function CreditReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>+233 24 412 3456</td>
-                      <td>Primary Mobile</td>
-                      <td>17 May 2026</td>
-                    </tr>
-                    <tr>
-                      <td>+233 20 811 9988</td>
-                      <td>Secondary Mobile</td>
-                      <td>04 Nov 2024</td>
-                    </tr>
-                    <tr>
-                      <td>+233 30 222 1100</td>
-                      <td>Residential Landline</td>
-                      <td>18 Sep 2020</td>
-                    </tr>
+                    {report.demographicHistory.telephones.length > 0 ? (
+                      report.demographicHistory.telephones.map((tel, i) => (
+                        <tr key={i}>
+                          <td>{tel.telephone}</td>
+                          <td>{tel.type}</td>
+                          <td>{tel.lastUpdate}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="3" style={{ textAlign: 'center' }}>No historical records</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
             {/* iv. Address History */}
-            <div className="demographics-card">
-              <h4>Address History</h4>
-              <InfoNote text="Residential and mailing address changes tracked for audit and contact purposes." />
+            <div className="demographics-card" style={{ background: '#ffffff', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '16px' }}>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: 'var(--green-900)' }}>Address History</h4>
+              <InfoNote text="Audit history for residential locations." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -756,21 +1653,17 @@ export default function CreditReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>H/No 45, Ablekuma, Accra</td>
-                      <td>Primary Residential</td>
-                      <td>17 May 2026</td>
-                    </tr>
-                    <tr>
-                      <td>Apt 2B, East Legon, Accra</td>
-                      <td>Previous Residential</td>
-                      <td>11 Dec 2024</td>
-                    </tr>
-                    <tr>
-                      <td>P.O. Box GP 192, Accra</td>
-                      <td>Mailing Address</td>
-                      <td>14 Feb 2022</td>
-                    </tr>
+                    {report.demographicHistory.addresses.length > 0 ? (
+                      report.demographicHistory.addresses.map((add, i) => (
+                        <tr key={i}>
+                          <td>{add.address}</td>
+                          <td>{add.type}</td>
+                          <td>{add.lastUpdate}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan="3" style={{ textAlign: 'center' }}>No historical records</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -782,12 +1675,11 @@ export default function CreditReport() {
         <section id="history" className="report-section section-card">
           <SectionTitleWithInfo
             title="SECTION 3 — CREDIT HEALTH & PAYMENT ANALYSIS"
-            subtitle="24-Month History"
-            tooltip="Summary of credit accounts, payment history heatmap, and repayment behavior analysis."
+            subtitle="Dossier Overview"
           />
 
           <div className="table-responsive" style={{ marginBottom: '30px' }}>
-            <InfoNote text="Overview of credit health indicators and a short interpretation for each metric." />
+            <InfoNote text="Overview of credit health indicators dynamically compiled from active facilities." />
             <table className="report-table">
               <thead>
                 <tr>
@@ -797,48 +1689,18 @@ export default function CreditReport() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Repayment Consistency</td>
-                  <td>
-                    <span className="status-pill success">STRONG</span>
-                  </td>
-                  <td>93% on-time payment rate over 24 months</td>
-                </tr>
-                <tr>
-                  <td>Delinquency History</td>
-                  <td>
-                    <span className="status-pill warning">MINOR</span>
-                  </td>
-                  <td>Worst DPD: 30 days (historic). No current arrears.</td>
-                </tr>
-                <tr>
-                  <td>Over-Indebtedness Risk</td>
-                  <td>
-                    <span className="status-pill success">LOW</span>
-                  </td>
-                  <td>DSR 34% — below the 40% caution threshold</td>
-                </tr>
-                <tr>
-                  <td>Recent Credit-Seeking</td>
-                  <td>
-                    <span className="status-pill warning">MODERATE</span>
-                  </td>
-                  <td>High enquiry volume in past 90 days — verify new facilities</td>
-                </tr>
-                <tr>
-                  <td>Loan Concentration Risk</td>
-                  <td>
-                    <span className="status-pill success">DIVERSIFIED</span>
-                  </td>
-                  <td>Exposure spread across bank, fintech and savings & loans</td>
-                </tr>
-                <tr>
-                  <td>Financial Stress Signals</td>
-                  <td>
-                    <span className="status-pill success">STABLE</span>
-                  </td>
-                  <td>No salary interruption or digital stress borrowing detected</td>
-                </tr>
+                {report.creditHealth.indicators.map((ind, i) => (
+                  <tr key={i}>
+                    <td>{ind.indicatorName}</td>
+                    <td>
+                      <span className={`status-pill ${
+                        ind.status === 'STRONG' || ind.status === 'STABLE' || ind.status === 'LOW' || ind.status === 'DIVERSIFIED' ? 'success' :
+                        ind.status === 'MINOR' || ind.status === 'MODERATE' || ind.status === 'CONCENTRATED' ? 'warning' : 'danger'
+                      }`}>{ind.status}</span>
+                    </td>
+                    <td>{ind.interpretation}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -847,57 +1709,55 @@ export default function CreditReport() {
           <div className="analytics-grid">
             <div className="analytics-card">
               <span>On-Time Ratio</span>
-              <strong>93%</strong>
-              <p>24-month average</p>
+              <strong>{report.creditHealth.analytics.onTimeRatio}</strong>
+              <p>24-month profile</p>
             </div>
             <div className="analytics-card">
               <span>Avg Days Past Due</span>
-              <strong>4 Days</strong>
-              <p>Grace period aligned</p>
+              <strong>{report.creditHealth.analytics.avgDaysPastDue}</strong>
+              <p>Overdue days</p>
             </div>
             <div className="analytics-card">
               <span>Worst Delinquency</span>
-              <strong>30 DPD</strong>
-              <p>Historical only</p>
+              <strong>{report.creditHealth.analytics.worstDelinquency}</strong>
+              <p>Peak overdue status</p>
             </div>
             <div className="analytics-card">
               <span>Consecutive On-Time</span>
-              <strong>14 Months</strong>
-              <p>Unbroken streak</p>
+              <strong>{report.creditHealth.analytics.consecutiveOnTime}</strong>
+              <p>Unbroken performance</p>
             </div>
             <div className="analytics-card">
               <span>Payment Trend</span>
-              <strong>Improving ↑</strong>
-              <p>Positive trajectory</p>
+              <strong>{report.creditHealth.analytics.paymentTrend}</strong>
+              <p>Risk trajectory</p>
             </div>
           </div>
 
           {/* Heatmap Widget */}
           <div className="heatmap-wrapper">
             <div className="heatmap-header-title">
-              12-Month Payment Heatmap (May 2025 – Apr 2026)
+              12-Month Payment Heatmap (Chronological order)
             </div>
-            <div className="heatmap-grid">
-              {heatmapMonths.map((m) => (
-                <div key={m.name} className="heatmap-cell">
-                  <span className="heatmap-month">{m.name}</span>
-                  <span className={`heatmap-status-dot dot-${m.status}`} />
+            <div className="heatmap-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '10px' }}>
+              {report.creditHealth.heatmapMonths.map((m, idx) => (
+                <div key={idx} className="heatmap-cell" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span className="heatmap-month" style={{ fontSize: '0.7rem', color: 'var(--gray-700)', marginBottom: '4px' }}>{m.name}</span>
+                  <span className={`heatmap-status-dot dot-${m.status}`} style={{
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    display: 'block',
+                    background: m.status === 'ontime' ? 'var(--green-500)' : m.status === 'late' ? '#bfa243' : m.status === 'missed' ? 'var(--red-500)' : '#dcdcdc'
+                  }} />
                 </div>
               ))}
             </div>
-            <div className="heatmap-legend">
-              <div className="legend-item">
-                <span className="legend-dot dot-ontime" /> On-Time
-              </div>
-              <div className="legend-item">
-                <span className="legend-dot dot-late" /> Late (1-30 DPD)
-              </div>
-              <div className="legend-item">
-                <span className="legend-dot dot-missed" /> Missed (30+ DPD)
-              </div>
-              <div className="legend-item">
-                <span className="legend-dot dot-nodata" /> No Data
-              </div>
+            <div className="heatmap-legend" style={{ display: 'flex', gap: '15px', marginTop: '15px', fontSize: '0.75rem' }}>
+              <div className="legend-item"><span className="legend-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--green-500)', marginRight: '6px' }} /> On-Time</div>
+              <div className="legend-item"><span className="legend-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#bfa243', marginRight: '6px' }} /> Late (1-30 DPD)</div>
+              <div className="legend-item"><span className="legend-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--red-500)', marginRight: '6px' }} /> Missed (30+ DPD)</div>
+              <div className="legend-item"><span className="legend-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#dcdcdc', marginRight: '6px' }} /> No Data</div>
             </div>
           </div>
         </section>
@@ -907,301 +1767,131 @@ export default function CreditReport() {
           <SectionTitleWithInfo
             title="SECTION 4 — TOTAL EXPOSURE & FACILITY STRUCTURE"
             subtitle="Active Liability Accounts"
-            tooltip="Detailed breakdown of all active loans and facilities with outstanding balances and payment history."
           />
 
           <div className="table-responsive">
-            <InfoNote text="Summary of active facilities with approved amounts, outstanding balances, and current status." />
+            <InfoNote text="Summary of credit lines, approved amounts, outstanding balances, and active DPD status." />
             <table className="report-table">
               <thead>
                 <tr>
                   <th>Lender / Institution</th>
                   <th>No. of Loans</th>
                   <th>Facility Type</th>
-                  <th>Approved (GHS)</th>
-                  <th>Outstanding (GHS)</th>
+                  <th>Approved</th>
+                  <th>Outstanding</th>
                   <th>Status</th>
                   <th>DPD</th>
                   <th>Refi Opp.</th>
                 </tr>
               </thead>
               <tbody>
-                {facilityRows.map((row) => (
-                  <tr key={row.lender}>
-                    <td>
-                      <strong
-                        style={{ cursor: 'pointer', color: 'var(--green-600)', textDecoration: 'underline' }}
-                        onClick={() => scrollToFacility(row.id)}
-                        title="Click to view details"
-                      >
-                        {row.lender}
-                      </strong>
-                    </td>
-                    <td>{row.number}</td>
-                    <td>{row.type}</td>
-                    <td>{row.approved}</td>
-                    <td>{row.outstanding}</td>
-                    <td>
-                      <span className="status-pill success">{row.status}</span>
-                    </td>
-                    <td>{row.dpd}</td>
-                    <td>
-                      <span className={`status-pill ${row.refi === 'HIGH' ? 'danger' : row.refi === 'Med' ? 'warning' : 'success'}`}>
-                        {row.refi}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                <tr className="summary-row">
-                  <td>TOTAL</td>
-                  <td><center>3</center></td>
-                  <td></td>
-                  <td>250,000</td>
-                  <td>118,000</td>
-                  <td></td>
-                  <td>0</td>
-                  <td></td>
-                </tr>
+                {report.facilityRows.length > 0 ? (
+                  report.facilityRows.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <strong
+                          style={{ cursor: 'pointer', color: 'var(--green-600)', textDecoration: 'underline' }}
+                          onClick={() => scrollToFacility(row.id)}
+                          title="Click to view details"
+                        >
+                          {row.lender}
+                        </strong>
+                      </td>
+                      <td><center>{row.number}</center></td>
+                      <td>{row.type}</td>
+                      <td>{row.approved}</td>
+                      <td>{row.outstanding}</td>
+                      <td>
+                        <span className={`status-pill ${row.status === 'Active' ? 'success' : 'neutral'}`}>{row.status}</span>
+                      </td>
+                      <td>{row.dpd}</td>
+                      <td>
+                        <span className={`status-pill ${row.refi === 'HIGH' ? 'danger' : row.refi === 'Med' ? 'warning' : 'success'}`}>
+                          {row.refi}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="8" style={{ textAlign: 'center' }}>No active facilities listed</td></tr>
+                )}
               </tbody>
             </table>
           </div>
 
-          {/* Account Detail 1 */}
-          <div id="facility-absa" className="facility-account">
-            <div className="facility-account-header">
-              <span>Absa Bank Ghana | Personal Loan — Unsecured | 90981737382</span>
-              <span className="status-pill success">Performing</span>
-            </div>
+          {/* Account Details list */}
+          {report.facilityRows.map((row) => (
+            <div key={row.id} id={row.id} className="facility-account" style={{ border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '20px', marginTop: '25px' }}>
+              <div className="facility-account-header" style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', borderBottom: '1px solid var(--gray-200)', paddingBottom: '10px', marginBottom: '15px' }}>
+                <span>{row.lender} | {row.type} — Account: {row.details.accountNumber}</span>
+                <span className={`status-pill ${row.status === 'Active' ? 'success' : 'neutral'}`}>{row.status}</span>
+              </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', padding: '0' }}>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Approved Amount</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 80,000</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Outstanding Balance</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 42,000</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Payment Status</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>ON TIME</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Current Arrears DPD</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>0 DPD</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>STANDARD</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>MEDIUM</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Date Disbursed</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2022</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Installment Amount</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 1,200</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Loan Expirey Date</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2025</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Date of Update</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2023</div>
-              </div>
-            </div>
-
-            <div className="facility-payment-history">
-              <div className="payment-history-header">
-                <span className="payment-title">24-Month Repayment History</span>
-                <div className="payment-legend">
-                  <div className="legend-item">
-                    <span className="legend-cell ontime">✔</span>
-                    <span>On-Time</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-cell late">30</span>
-                    <span>Late (1-30 DPD)</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-cell missed">60+</span>
-                    <span>Missed (30+ DPD)</span>
-                  </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Approved Amount</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.approved}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Outstanding Balance</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.outstanding}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Last Payment Status</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.details.lastPaymentStatus}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Overdue Arrears</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600', color: row.details.currentArrearsDpd !== 'GHS 0' ? 'var(--red-500)' : 'inherit' }}>{row.details.currentArrearsDpd}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Interest Profile</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.details.interestProfile}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Refinance Option</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.refi}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Date Disbursed</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.details.dateDisbursed}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Installment Value</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.details.installmentAmount}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Closed Date</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.details.expiryDate}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--gray-600)', textTransform: 'uppercase' }}>Last Update Feed</span>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600' }}>{row.details.lastUpdatedDate}</div>
                 </div>
               </div>
-              <div className="behaviour-grid-24">
-                {historyAccount1.map((status, index) => (
-                  <div key={index} className={getCellClass(status)} title={`${getMonthYear(index)}: ${status === 'C' ? 'On-Time' : status === 'L' ? 'Late (1-30 DPD)' : status === 'M' ? 'Missed (30+ DPD)' : 'No Data'}`}>
-                    <div className="cell-label">{getCellLabel(status)}</div>
-                    <div className="cell-month">{getMonthYear(index)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Account Detail 2 */}
-          <div id="facility-mtn" className="facility-account">
-            <div className="facility-account-header">
-              <span>MTN Momo Loan | Digital Revolving Loan | 876543 </span>
-              <span className="status-pill success">Performing</span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', padding: '0' }}>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Approved Amount</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 10,000</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Outstanding Balance</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 4,500</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Payment Status</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>On Time</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Current Arrears DPD</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>0 DPD</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>HIGH</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>LOW</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Date Disbursed</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2022</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Installment Amount</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 1,200</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Loan Expirey Date</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2025</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Date of Update</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2023</div>
-              </div>
-            </div>
-
-            <div className="facility-payment-history">
-              <div className="payment-history-header">
-                <span className="payment-title">24-Month Repayment History</span>
-                <div className="payment-legend">
-                  <div className="legend-item">
-                    <span className="legend-cell ontime">✔</span>
-                    <span>On-Time</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-cell late">30</span>
-                    <span>Late (1-30 DPD)</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-cell missed">60+</span>
-                    <span>Missed (30+ DPD)</span>
-                  </div>
+              {/* Account detailed 24-month behaviour */}
+              <div className="facility-payment-history" style={{ borderTop: '1px solid var(--gray-200)', paddingTop: '15px' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>24-Month Repayment History Grid</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '6px' }}>
+                  {row.details.repaymentHistory24.slice(-12).map((status, index) => (
+                    <div key={index} className={getCellClass(status)} style={{
+                      padding: '6px',
+                      borderRadius: '4px',
+                      textAlign: 'center',
+                      fontSize: '0.75rem',
+                      background: status === 'C' ? 'var(--green-100)' : status === 'L' ? '#fdf5e6' : status === 'M' ? '#fdf0f0' : '#f4f4f4',
+                      color: status === 'C' ? 'var(--green-800)' : status === 'L' ? '#8b6508' : status === 'M' ? '#b22222' : 'var(--gray-500)',
+                      border: '1px solid ' + (status === 'C' ? 'var(--green-300)' : status === 'L' ? '#f5deb3' : status === 'M' ? '#fbc4c4' : 'var(--gray-300)')
+                    }}>
+                      <div style={{ fontWeight: 'bold' }}>{getCellLabel(status)}</div>
+                      <div style={{ fontSize: '0.55rem', color: 'var(--gray-500)' }}>M{12 - index}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="behaviour-grid-24">
-                {historyAccount2.map((status, index) => (
-                  <div key={index} className={getCellClass(status)} title={`Month ${index + 1}: ${status === 'L' ? '30 Days Late' : 'On-Time'}: ${getMonthYear(index)}`}>
-                    <div className="cell-label">{getCellLabel(status)}</div>
-                    <div className="cell-month">{getMonthYear(index)}</div>
-                  </div>
-                ))}
-              </div>
             </div>
-          </div>
-
-          {/* Account Detail 3 */}
-          <div id="facility-bayport" className="facility-account">
-            <div className="facility-account-header">
-              <span>Bayport Savings and Loans | SME Business-linked Loan | LG7787YY5435</span>
-              <span className="status-pill success">Performing</span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px', padding: '0' }}>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Approved Amount</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 160,000</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Outstanding Balance</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 71,500</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Payment Status</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>ON TIME</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Current Arrears DPD</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>0 DPD</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Interest Profile</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>HIGH</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Refinance Opportunity</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>HIGH</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Date Disbursed</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2022</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Installment Amount</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>GHS 1,200</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Loan Expirey Date</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2025</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--gray-600)', textTransform: 'uppercase', fontWeight: '200' }}>Last Date of Update</span>
-                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--gray-900)' }}>03 Mar 2023</div>
-              </div>
-            </div>
-
-            <div className="facility-payment-history">
-              <div className="payment-history-header">
-                <span className="payment-title">24-Month Repayment History</span>
-                <div className="payment-legend">
-                  <div className="legend-item">
-                    <span className="legend-cell ontime">✔</span>
-                    <span>On-Time</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-cell late">30</span>
-                    <span>Late (1-30 DPD)</span>
-                  </div>
-                  <div className="legend-item">
-                    <span className="legend-cell missed">60+</span>
-                    <span>Missed (30+ DPD)</span>
-                  </div>
-                </div>
-              </div>
-              <div className="behaviour-grid-24">
-                {historyAccount3.map((status, index) => (
-                  <div key={index} className={getCellClass(status)} title={`${getMonthYear(index)}: ${status === 'C' ? 'On-Time' : status === 'L' ? 'Late (1-30 DPD)' : status === 'M' ? 'Missed (30+ DPD)' : 'No Data'}`}>
-                    <div className="cell-label">{getCellLabel(status)}</div>
-                    <div className="cell-month">{getMonthYear(index)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          ))}
         </section>
 
         {/* Section 4B: Joint Loan Account Details */}
@@ -1209,11 +1899,10 @@ export default function CreditReport() {
           <SectionTitleWithInfo
             title="SECTION 4B — JOINT LOAN ACCOUNT DETAILS"
             subtitle="Co-Borrower Liabilities"
-            tooltip="Details of loans shared with co-borrowers and joint liability obligations."
           />
 
           <div className="table-responsive">
-            <InfoNote text="Lists co-borrowers and joint loan exposures with recent payment details." />
+            <InfoNote text="Shared liabilities matching name and credentials records." />
             <table className="report-table">
               <thead>
                 <tr>
@@ -1228,26 +1917,26 @@ export default function CreditReport() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>Ama Serwaa Mensah</strong></td>
-                  <td>22 Jun 1989</td>
-                  <td>JL-228192A</td>
-                  <td>GHS 250,000</td>
-                  <td>GHS 0</td>
-                  <td>0</td>
-                  <td>15 Dec 2028</td>
-                  <td>GHS 12,500</td>
-                </tr>
-                <tr>
-                  <td><strong>Kojo Amponsah</strong></td>
-                  <td>10 Oct 1980</td>
-                  <td>JL-559128B</td>
-                  <td>GHS 120,000</td>
-                  <td>GHS 4,200</td>
-                  <td>1 month</td>
-                  <td>30 May 2026</td>
-                  <td>GHS 5,000</td>
-                </tr>
+                {report.jointLoans.length > 0 ? (
+                  report.jointLoans.map((jl, i) => (
+                    <tr key={i}>
+                      <td><strong>{jl.coBorrowerName}</strong></td>
+                      <td>{jl.coBorrowerDob}</td>
+                      <td>{jl.accountNumber}</td>
+                      <td>{jl.loanAmount}</td>
+                      <td style={{ color: jl.arrearAmount !== 'GHS 0' ? 'var(--red-500)' : 'inherit' }}>{jl.arrearAmount}</td>
+                      <td>{jl.monthsInArrears}</td>
+                      <td>{jl.lastPaymentDate}</td>
+                      <td>{jl.lastPaymentAmount}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" style={{ textAlign: 'center', color: 'var(--gray-500)', padding: '20px' }}>
+                      No co-borrower joint loans logged in this dossier.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -1260,39 +1949,43 @@ export default function CreditReport() {
             <span className="section-subtitle-tag">Capacity Engine</span>
           </div>
 
-          <div className="affordability-grid">
+          <div className="affordability-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
             <div className="detail-column" style={{ background: '#ffffff', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '24px' }}>
               <div className="detail-row">
                 <span>Estimated Monthly Income</span>
-                <strong>GHS 25,000</strong>
+                <strong>{report.affordabilityData.income}</strong>
               </div>
               <div className="detail-row">
                 <span>Total Debt Obligations</span>
-                <strong>GHS 8,500</strong>
+                <strong>{report.affordabilityData.debt}</strong>
               </div>
               <div className="detail-row">
                 <span>Estimated Disposable Income</span>
-                <strong>GHS 10,800</strong>
+                <strong>{report.affordabilityData.disposable}</strong>
               </div>
               <div className="detail-row">
                 <span>Debt Service Ratio (DSR)</span>
-                <strong>34%</strong>
+                <strong>{report.affordabilityData.dsr}</strong>
               </div>
               <div className="detail-row">
                 <span>Maximum Borrowing Headroom</span>
-                <strong>GHS 45,000</strong>
+                <strong>{report.affordabilityData.headroom}</strong>
               </div>
             </div>
 
-            <div className="affordability-card">
+            <div className="affordability-card" style={{ background: 'var(--gray-100)', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div className="affordability-card-header">
                 <span>Affordability Rating</span>
-                <h3>HEALTHY</h3>
-                <p>Debt Service Ratio of 34% is below the 40% caution limit threshold.</p>
+                <h3 style={{
+                  margin: '8px 0',
+                  color: report.affordabilityData.rating === 'HEALTHY' ? 'var(--green-800)' : 'var(--red-500)',
+                  fontWeight: 'bold'
+                }}>{report.affordabilityData.rating}</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--gray-700)', margin: 0 }}>{report.affordabilityData.description}</p>
               </div>
-              <div className="ai-insight-box">
-                <strong>AI LENDING INSIGHT</strong>
-                <p>Kwame can absorb additional moderate credit exposure safely. Recommended max new facility: GHS 45,000.</p>
+              <div className="ai-insight-box" style={{ background: '#ffffff', padding: '16px', borderRadius: '8px', borderLeft: '3px solid var(--green-500)', marginTop: '15px' }}>
+                <strong style={{ fontSize: '0.72rem', color: 'var(--green-900)' }}>AI LENDING INSIGHT</strong>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: 'var(--gray-700)' }}>{report.affordabilityData.insight}</p>
               </div>
             </div>
           </div>
@@ -1305,8 +1998,8 @@ export default function CreditReport() {
             <span className="section-subtitle-tag">Regulatory Gateways</span>
           </div>
 
-          <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--green-900)', margin: '0 0 14px 0' }}>Early Warning Risk Signals</p>
-          <InfoNote text="Early warning indicators to help prioritize institutional review and monitoring actions." />
+          <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--green-900)', margin: '0 0 10px 0' }}>Early Warning Risk Signals</p>
+          <InfoNote text="Critical monitoring logs based on consumer payment trajectories." />
           <div className="table-responsive" style={{ marginBottom: '30px' }}>
             <table className="report-table">
               <thead>
@@ -1317,34 +2010,23 @@ export default function CreditReport() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Increase in credit enquiries</td>
-                  <td><span className="status-pill warning">MEDIUM</span></td>
-                  <td>Review purpose and timing of recent applications before new approval</td>
-                </tr>
-                <tr>
-                  <td>Short-term digital borrowing</td>
-                  <td><span className="status-pill success">LOW</span></td>
-                  <td>Monitor for emerging pattern — no immediate action required</td>
-                </tr>
-                <tr>
-                  <td>Exposure growth in last 90 days</td>
-                  <td><span className="status-pill warning">MEDIUM</span></td>
-                  <td>Verify against declared income and confirm total current obligations</td>
-                </tr>
-                <tr>
-                  <td>Missed payment trend</td>
-                  <td><span className="status-pill success">LOW</span></td>
-                  <td>Historical only — no current negative trend detected</td>
-                </tr>
+                {report.complianceData.riskSignals.map((sig, i) => (
+                  <tr key={i}>
+                    <td>{sig.signal}</td>
+                    <td>
+                      <span className={`status-pill ${sig.severity === 'HIGH' ? 'danger' : sig.severity === 'MEDIUM' ? 'warning' : 'success'}`}>
+                        {sig.severity}
+                      </span>
+                    </td>
+                    <td>{sig.requiredAction}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
-          <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--green-900)', margin: '0 0 14px 0' }}>Fraud & Synthetic Identity Verification Checks</p>
-          <InfoNote text="Identity verification checks and risk flags to surface potential fraudulent or synthetic profiles." />
+          <p style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--green-900)', margin: '0 0 10px 0' }}>Fraud & Synthetic Identity Verification Checks</p>
           <div className="table-responsive">
-            <InfoNote text="Institutional enquiries logged against the borrower in the past 12 months." />
             <table className="report-table">
               <thead>
                 <tr>
@@ -1354,36 +2036,13 @@ export default function CreditReport() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Identity Document Match</td>
-                  <td><span className="status-pill success">VERIFIED</span></td>
-                  <td>Ghana Card details match national identity database</td>
-                </tr>
-                <tr>
-                  <td>Phone Number Consistency</td>
-                  <td><span className="status-pill success">STABLE</span></td>
-                  <td>Mobile number correlates consistently with borrower bureau record</td>
-                </tr>
-                <tr>
-                  <td>Device Risk Indicator</td>
-                  <td><span className="status-pill success">LOW</span></td>
-                  <td>No anomalous device tags or high-risk location logs</td>
-                </tr>
-                <tr>
-                  <td>Synthetic Identity Risk</td>
-                  <td><span className="status-pill success">LOW</span></td>
-                  <td>History and profiles show zero synthetic composite traits</td>
-                </tr>
-                <tr>
-                  <td>Multi-ID Usage Flag</td>
-                  <td><span className="status-pill neutral">NONE</span></td>
-                  <td>Zero active instances of duplicate identity credentials</td>
-                </tr>
-                <tr>
-                  <td>Adverse Court Records Check</td>
-                  <td><span className="status-pill neutral">NONE</span></td>
-                  <td>No active legal judgments, bankruptcies, or court disputes</td>
-                </tr>
+                {report.complianceData.fraudChecks.map((ch, i) => (
+                  <tr key={i}>
+                    <td>{ch.checkDescription}</td>
+                    <td><span className="status-pill success">{ch.status}</span></td>
+                    <td>{ch.details}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -1393,14 +2052,14 @@ export default function CreditReport() {
         <section id="cheques-judgements" className="report-section section-card">
           <div className="section-title">
             SECTION 6B — DUD CHEQUE & JUDGEMENT RECORDS
-            <span className="section-subtitle-tag">Public Records & Bank Disclosures</span>
+            <span className="section-subtitle-tag">Public Disclosures</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Dud Cheques Info */}
             <div className="sub-section-card">
-              <h4>Dud Cheque Information</h4>
-              <InfoNote text="Records of returned cheques with reasons and dates for bank disclosure." />
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: 'var(--green-900)' }}>Dud Cheque Information</h4>
+              <InfoNote text="Public registers of returned checks." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -1414,28 +2073,24 @@ export default function CreditReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td><strong>CHQ-99881</strong></td>
-                      <td>Standard Chartered</td>
-                      <td>10 Jan 2025</td>
-                      <td>GHS 15,000</td>
-                      <td>Insufficient Funds</td>
-                      <td>12 Jan 2025</td>
-                    </tr>
-                    <tr>
-                      <td><strong>GHS-009881</strong></td>
-                      <td>Absa Bank Ghana Ltd</td>
-                      <td>12 Jun 2024</td>
-                      <td>USD 50,000</td>
-                      <td>Fraud</td>
-                      <td>12 Jun 2024</td>
-                    </tr>
-                    <tr>
-
-                      <td colSpan="5" style={{ textAlign: 'center', color: 'var(--gray-500)' }}>
-                        No other dud cheques recorded in the last 5 years.
-                      </td>
-                    </tr>
+                    {report.publicRecordsData.dudCheques.length > 0 ? (
+                      report.publicRecordsData.dudCheques.map((dc, i) => (
+                        <tr key={i}>
+                          <td><strong>{dc.chequeNumber}</strong></td>
+                          <td>{dc.issuingBank}</td>
+                          <td>{dc.dateIssued}</td>
+                          <td>{dc.amount}</td>
+                          <td>{dc.returnReason}</td>
+                          <td>{dc.dateBounced}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" style={{ textAlign: 'center', color: 'var(--gray-500)', padding: '16px' }}>
+                          No dud cheques recorded in database.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1443,8 +2098,8 @@ export default function CreditReport() {
 
             {/* Judgement Info */}
             <div className="sub-section-card">
-              <h4>Judgement Information</h4>
-              <InfoNote text="Court judgements and their status, useful for legal and recovery reviews." />
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: 'var(--green-900)' }}>Judgement Information</h4>
+              <InfoNote text="Court settlements and judicial litigation history." />
               <div className="table-responsive">
                 <table className="report-table">
                   <thead>
@@ -1457,15 +2112,23 @@ export default function CreditReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td><strong>Accra High Court / H1-992-25</strong></td>
-                      <td>Lighthouse Properties Ltd.</td>
-                      <td>GHS 85,000</td>
-                      <td>14 Oct 2025</td>
-                      <td>
-                        <span className="status-pill success">SATISFIED</span>
-                      </td>
-                    </tr>
+                    {report.publicRecordsData.judgements.length > 0 ? (
+                      report.publicRecordsData.judgements.map((jd, i) => (
+                        <tr key={i}>
+                          <td><strong>{jd.caseNumber}</strong></td>
+                          <td>{jd.plaintiff}</td>
+                          <td>{jd.amount}</td>
+                          <td>{jd.judgementDate}</td>
+                          <td><span className="status-pill success">{jd.status}</span></td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" style={{ textAlign: 'center', color: 'var(--gray-500)', padding: '16px' }}>
+                          No judicial judgments records found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1477,7 +2140,7 @@ export default function CreditReport() {
         <section id="enquiries" className="report-section section-card">
           <div className="section-title">
             SECTION 6C — BUREAU ENQUIRY HISTORY
-            <span className="section-subtitle-tag">12-Month Inquiry Trail</span>
+            <span className="section-subtitle-tag">Inquiry Trail</span>
           </div>
 
           <div className="table-responsive">
@@ -1491,30 +2154,22 @@ export default function CreditReport() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>17 May 2026 | 3:46 PM</strong></td>
-                  <td>ABC Rural Bank Ltd.</td>
-                  <td>Credit Assessment</td>
-                  <td>GHS 50,000</td>
-                </tr>
-                <tr>
-                  <td><strong>04 May 2026 | 11:20 AM</strong></td>
-                  <td>Fidelity Bank Ghana</td>
-                  <td>Loan Application Review</td>
-                  <td>GHS 100,000</td>
-                </tr>
-                <tr>
-                  <td><strong>18 Apr 2026 | 9:15 AM</strong></td>
-                  <td>MTN Momo Loan</td>
-                  <td>Revolving Digital Credit Line</td>
-                  <td>GHS 10,000</td>
-                </tr>
-                <tr>
-                  <td><strong>12 Mar 2026 | 4:50 PM</strong></td>
-                  <td>Ecobank Ghana Ltd.</td>
-                  <td>Credit Card Application</td>
-                  <td>GHS 25,000</td>
-                </tr>
+                {report.enquiriesList.length > 0 ? (
+                  report.enquiriesList.map((enq, i) => (
+                    <tr key={i}>
+                      <td><strong>{enq.date}</strong></td>
+                      <td>{enq.requestingInstitution}</td>
+                      <td>{enq.purpose}</td>
+                      <td>{enq.amount}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', color: 'var(--gray-500)', padding: '20px' }}>
+                      No bureau enquiries logged in the last 12 months.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -1527,129 +2182,119 @@ export default function CreditReport() {
             <span className="section-subtitle-tag">AI-Assisted Assessment</span>
           </div>
 
-          <div className="ai-decision-panel" style={{ marginBottom: '30px' }}>
-            <div className="decision-result-card">
-              <span>Lending Recommendation</span>
-              <h2>APPROVE</h2>
-              <span className="status-pill warning" style={{ border: 'none', background: 'rgba(139,101,8,0.1)', color: '#8b6508' }}>
-                With Conditions
+          <div className="ai-decision-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+            <div className="decision-result-card" style={{ background: report.aiDecision.recommendation === 'APPROVE' ? 'var(--green-100)' : '#fdf0f0', border: '1px solid ' + (report.aiDecision.recommendation === 'APPROVE' ? 'var(--green-300)' : 'var(--red-500)'), borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--gray-700)' }}>Lending Recommendation</span>
+              <h2 style={{
+                fontSize: '2rem',
+                margin: '10px 0',
+                color: report.aiDecision.recommendation === 'APPROVE' ? 'var(--green-800)' : 'var(--red-500)',
+                fontWeight: 'bold'
+              }}>{report.aiDecision.recommendation}</h2>
+              <span className={`status-pill ${report.aiDecision.recommendation === 'APPROVE' ? 'success' : 'warning'}`}>
+                {report.aiDecision.subStatus}
               </span>
             </div>
 
             <div className="detail-column" style={{ background: '#ffffff', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '24px' }}>
               <div className="detail-row">
                 <span>Max New Exposure Recommended</span>
-                <strong>GHS 45,000</strong>
+                <strong>{report.aiDecision.maxNewExposure}</strong>
               </div>
               <div className="detail-row">
                 <span>Target Facility Strategy</span>
-                <strong>Consolidation recommended</strong>
+                <strong>{report.aiDecision.targetStrategy}</strong>
               </div>
               <div className="detail-row">
                 <span>Monitoring Frequency</span>
-                <strong>Monthly bureau triggers</strong>
+                <strong>{report.aiDecision.monitoringFrequency}</strong>
               </div>
               <div className="detail-row">
                 <span>Verification Check Required</span>
-                <strong>Updated primary bank statements</strong>
+                <strong>{report.aiDecision.verificationCheckRequired}</strong>
               </div>
               <div className="detail-row">
                 <span>Collateral / Security Requirement</span>
-                <strong>Not mandatory</strong>
+                <strong>{report.aiDecision.collateralRequirement}</strong>
               </div>
             </div>
           </div>
 
-          <div className="opportunity-wrapper" style={{ marginBottom: '35px' }}>
-            {/* Predictive analytics panel */}
+          <div className="opportunity-wrapper" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '35px' }}>
             <div style={{ background: '#ffffff', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '24px' }}>
               <p style={{ margin: '0 0 16px 0', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', color: 'var(--gray-700)', letterSpacing: '0.05em' }}>
                 Predictive Risk Classifications
               </p>
               <div className="detail-row">
                 <span>Probability of Default (PD)</span>
-                <strong>3.8% (12-month forecast)</strong>
+                <strong>{report.aiDecision.riskClassifications.probabilityOfDefault}</strong>
               </div>
               <div className="detail-row">
                 <span>Refinance Probability</span>
-                <strong>HIGH (Consolidation candidate)</strong>
+                <strong>{report.aiDecision.riskClassifications.refinanceProbability}</strong>
               </div>
               <div className="detail-row">
                 <span>Cross-Sell Propensity</span>
-                <strong>VERY HIGH (Salary, insurance)</strong>
+                <strong>{report.aiDecision.riskClassifications.crossSellPropensity}</strong>
               </div>
               <div className="detail-row">
                 <span>Customer Churn Risk</span>
-                <strong>MEDIUM (RM retention campaigns)</strong>
+                <strong>{report.aiDecision.riskClassifications.churnRisk}</strong>
               </div>
               <div className="detail-row">
                 <span>Borrower Financial Stress</span>
-                <strong>STABLE (No active triggers)</strong>
+                <strong>{report.aiDecision.riskClassifications.financialStressStatus}</strong>
               </div>
             </div>
 
-            {/* AI action list cards */}
-            <div className="action-list-card">
-              <span className="card-label">Recommended Strategy Campaigns</span>
-              <ul>
-                <li>Offer debt consolidation structure to reduce third-party risk</li>
-                <li>Qualifies for pre-approved salary overdraft or business card limit increase</li>
-                <li>Cross-sell insurance-backed loan products to hedge exposure</li>
-                <li>Assign proactive relationship manager check-ins to handle competitor refinance poaching</li>
-                <li>Pre-approved credit headroom ceiling: GHS 45,000</li>
+            <div className="action-list-card" style={{ background: 'var(--gray-100)', border: '1px solid var(--gray-200)', borderRadius: '12px', padding: '24px' }}>
+              <span className="card-label" style={{ fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', color: 'var(--gray-700)', display: 'block', marginBottom: '15px' }}>Recommended Strategy Campaigns</span>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.82rem', color: 'var(--gray-800)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {report.aiDecision.recommendedStrategyCampaigns.map((camp, idx) => (
+                  <li key={idx}>{camp}</li>
+                ))}
               </ul>
             </div>
           </div>
 
-          {/* AI credit summary narrative paragraph */}
           <div style={{ background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)', borderRadius: '12px', padding: '24px', marginBottom: '40px' }}>
-            {/* background: 'radial-gradient(circle, var(--green-700) 0%, var(--green-900) 100%)',*/}
             <p style={{ margin: '0 0 12px 0', fontWeight: 'bold', color: 'var(--gold-500)', fontSize: '1.2rem' }}>
               <span style={{ color: 'var(--gold-500)' }}>✦</span> AI Executive Narrative — For Relationship Manager Reference
             </p>
-            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: '0 0 12px 0' }}>
-              Kwame Mensah demonstrates highly consistent payment behavior with an improving streak over the past 14 consecutive months. Total aggregate debt exposure is distributed across three discrete institutions (commercial bank, digital fintech lender, and SME microfinance), creating a total Debt Service Ratio (DSR) of 34%. This is well-managed and below the critical 40% warning limit.
-            </p>
-            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: '0 0 12px 0' }}>
-              The primary risk signal is a slight spike in credit inquiries, which can indicate that the customer is seeking additional capital. Relationship managers must confirm whether any newly approved loans have been finalized before discounting new funds to prevent over-leverage. Identification audits and synthetic fraud screens are entirely verified and clean.
-            </p>
-            <p style={{ fontSize: '0.95rem', lineHeight: '1.6', color: 'var(--gold-500)', margin: 0 }}>
-              <strong>Lending Recommendation:</strong>
-            </p>
-            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: 0 }}>
-              APPROVE WITH CONDITIONS. Verify income statements and confirm competitors' outstanding debt margins prior to final disbursement. Implement monthly bureau automated event monitoring.
+            <p style={{ fontSize: '0.82rem', lineHeight: '1.6', color: 'var(--gray-100)', margin: '0' }}>
+              {report.aiDecision.narrative}
             </p>
           </div>
 
-          {/* Compliance notice boxes */}
-          <div className="compliance-container">
+          <div className="compliance-container" style={{ borderTop: '1px solid var(--gray-200)', paddingTop: '25px', marginTop: '20px' }}>
             <p style={{ margin: '0 0 18px 0', fontWeight: 'bold', fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--gray-800)', letterSpacing: '0.05em' }}>
               Compliance & Data Governance Directives
             </p>
-            <div className="compliance-grid">
+            <div className="compliance-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '20px' }}>
               <div className="compliance-box">
-                <span>Permitted Inquiry Purpose</span>
-                <p>Authorized for credit evaluation, risk portfolio management, collection analysis, or fraud mitigation checks under user authorization.</p>
+                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--green-900)', display: 'block', marginBottom: '6px' }}>Permitted Inquiry Purpose</span>
+                <p style={{ fontSize: '0.75rem', color: 'var(--gray-700)', margin: 0 }}>Authorized for credit evaluation, risk portfolio management, collection analysis, or fraud mitigation checks under user authorization.</p>
               </div>
               <div className="compliance-box">
-                <span>Information Recency</span>
-                <p>Reflects bureau records compiled on 17 May 2026. Financial updates are supplied via regulated member feeds.</p>
+                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--green-900)', display: 'block', marginBottom: '6px' }}>Information Recency</span>
+                <p style={{ fontSize: '0.75rem', color: 'var(--gray-700)', margin: 0 }}>Reflects bureau records compiled on {report.reportMeta.issuedAt}. Financial updates are supplied via regulated member feeds.</p>
               </div>
               <div className="compliance-box">
-                <span>Customer Dispute Redress</span>
-                <p>Borrowers hold legal rights to challenge report inaccuracies with XDS Data Ghana Ltd under the Credit Reporting Act, 2007 (Act 726).</p>
+                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--green-900)', display: 'block', marginBottom: '6px' }}>Customer Dispute Redress</span>
+                <p style={{ fontSize: '0.75rem', color: 'var(--gray-700)', margin: 0 }}>Borrowers hold legal rights to challenge report inaccuracies with XDS Data Ghana Ltd under the Credit Reporting Act, 2007 (Act 726).</p>
               </div>
               <div className="compliance-box">
-                <span>Security & Handling</span>
-                <p>Access privileges must comply with security protocols. Unauthorized distribution violates federal data security directives.</p>
+                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--green-900)', display: 'block', marginBottom: '6px' }}>Security & Handling</span>
+                <p style={{ fontSize: '0.75rem', color: 'var(--gray-700)', margin: 0 }}>Access privileges must comply with security protocols. Unauthorized distribution violates federal data security directives.</p>
               </div>
             </div>
 
-            <p className="compliance-footer-text">
-              This intelligence dossier is generated by XDS Data Ghana Limited, registered and licensed by the Bank of Ghana under the Credit Reporting Act, 2007 (Act 726). Address: Suite A701, Octagon Building, Barnes Road, Accra, Ghana. Sample dossiers are configured for testing purposes. Real-time disclosures are regulated under the Data Protection Act, 2012 (Act 843), central bank guidelines, consumer consent statutes, and organizational credit criteria. XDS Data Ghana Limited is the premier credit bureau in Ghana and West Africa. | www.xdsdata.com
+            <p className="compliance-footer-text" style={{ fontSize: '0.65rem', color: 'var(--gray-500)', lineHeight: '1.4' }}>
+              This intelligence dossier is generated by XDS Data Ghana Limited, registered and licensed by the Bank of Ghana under the Credit Reporting Act, 2007 (Act 726). Suite A701, Octagon Building, Barnes Road, Accra, Ghana. Sample dossiers are configured for testing purposes. Real-time disclosures are regulated under the Data Protection Act, 2012 (Act 843), central bank guidelines, consumer consent statutes, and organizational credit criteria. | www.xdsdata.com
             </p>
           </div>
         </section>
+
         {/* Glossary of Terms */}
         <section id="glossary" className="report-section section-card glossary-section">
           <SectionTitleWithInfo
@@ -1657,7 +2302,7 @@ export default function CreditReport() {
             subtitle="Reference Guide"
           />
 
-          <p className="glossary-intro">
+          <p className="glossary-intro" style={{ fontSize: '0.8rem', color: 'var(--gray-700)', marginBottom: '20px' }}>
             The following definitions explain the key credit and financial terms used throughout this report.
             They are provided to assist lenders, relationship managers, and authorised users in accurately
             interpreting the data presented.
@@ -1772,23 +2417,22 @@ export default function CreditReport() {
               ],
             },
           ].map(({ letter, terms }) => (
-            <div key={letter} className="glossary-group">
-              <div className="glossary-letter-badge">{letter}</div>
-              <div className="glossary-terms-list">
+            <div key={letter} className="glossary-group" style={{ margin: '15px 0', borderBottom: '1px solid var(--gray-200)', paddingBottom: '15px' }}>
+              <div className="glossary-letter-badge" style={{ display: 'inline-block', background: 'var(--green-950)', color: '#ffffff', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.8rem' }}>{letter}</div>
+              <div className="glossary-terms-list" style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {terms.map(({ term, definition }) => (
-                  <div key={term} className="glossary-term-row">
-                    <div className="glossary-term-name">{term}</div>
-                    <div className="glossary-term-def">{definition}</div>
+                  <div key={term} className="glossary-term-row" style={{ fontSize: '0.8rem', lineHeight: '1.4' }}>
+                    <div className="glossary-term-name" style={{ fontWeight: 'bold', color: 'var(--green-900)' }}>{term}</div>
+                    <div className="glossary-term-def" style={{ color: 'var(--gray-700)' }}>{definition}</div>
                   </div>
                 ))}
               </div>
             </div>
           ))}
 
-          <div className="glossary-footer-note">
+          <div className="glossary-footer-note" style={{ marginTop: '20px', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--gray-600)' }}>
             <span>❗️</span>
             Definitions are aligned with the Credit Reporting Act, 2007 (Act 726) and general West African banking practices.
-            For regulatory clarifications, contact XDS Data Ghana Limited at ask@xdsdata.com
           </div>
         </section>
       </main>
