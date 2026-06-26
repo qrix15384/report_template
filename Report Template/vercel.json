@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api-proxy/:path*",
+      "destination": "https://www.online.xdsdata.com/XdsDataRestApi/Api/:path*"
+    }
+  ]
+}
