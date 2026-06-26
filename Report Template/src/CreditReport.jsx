@@ -66,11 +66,15 @@ export default function CreditReport() {
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [dataTicket, setDataTicket] = useState(null);
+  const [loginDisplayName, setLoginDisplayName] = useState(''); // Full name from login API response
+
+  // Enquiry Reason — shown on search form and passed to API + report
+  const [enquiryReason, setEnquiryReason] = useState('Credit Assessment');
   
   // Live Search States (DOB and ID are dynamically used in search, others are UI placeholders as requested)
-  const [searchName, setSearchName] = useState('KINGSLEY OKYERE');
-  const [searchDob, setSearchDob] = useState('2000-04-25');
-  const [searchId, setSearchId] = useState('GHA-717322166-9');
+  const [searchName, setSearchName] = useState('');
+  const [searchDob, setSearchDob] = useState('');
+  const [searchId, setSearchId] = useState('');
   const [searchAccount, setSearchAccount] = useState('');
   
   const [loading, setLoading] = useState(false);
@@ -142,6 +146,18 @@ export default function CreditReport() {
       
       if (loginRes && loginRes.dataTicket && loginRes.statusCode === 200) {
         setDataTicket(loginRes.dataTicket);
+        // Extract display name from API response — try common field names
+        const resolvedName =
+          loginRes.fullName ||
+          loginRes.FullName ||
+          loginRes.userName ||
+          loginRes.UserName ||
+          loginRes.name ||
+          loginRes.Name ||
+          loginRes.displayName ||
+          loginRes.subscriber_name ||
+          '';
+        setLoginDisplayName(resolvedName.trim() || loginUsername);
       } else {
         throw new Error(loginRes?.message || 'Access Denied: Invalid credentials.');
       }
@@ -168,7 +184,7 @@ export default function CreditReport() {
       const formattedDob = searchDob ? searchDob.replace(/-/g, '/') : '';
       
       // Mapped query contains ONLY DateOfBirth and identification (ignoring name & account parameters)
-      const matchUrl = `/api-proxy/getconsumermatch?dataticket=${encodeURIComponent(dataTicket)}&enquiryReason=Test&DateOfBirth=${encodeURIComponent(formattedDob)}&identification=${encodeURIComponent(searchId)}`;
+      const matchUrl = `/api-proxy/getconsumermatch?dataticket=${encodeURIComponent(dataTicket)}&enquiryReason=${encodeURIComponent(enquiryReason)}&DateOfBirth=${encodeURIComponent(formattedDob)}&identification=${encodeURIComponent(searchId)}`;
       
       const matchRes = await fetch(matchUrl).then(r => r.json());
       
@@ -225,6 +241,7 @@ export default function CreditReport() {
 
   const handleLogout = () => {
     setDataTicket(null);
+    setLoginDisplayName('');
     setRawReportData(null);
     setMatchResults(null);
     setSelectedConsumer(null);
@@ -285,7 +302,7 @@ export default function CreditReport() {
   // ==========================================
   // API DATA MAPPING ADAPTER
   // ==========================================
-  const mapApiDataToReport = (apiData) => {
+  const mapApiDataToReport = (apiData, purposeOfEnquiry = 'Credit Assessment') => {
     if (!apiData) return null;
 
     const personal = apiData.personalDetailsSummary || {};
@@ -295,7 +312,8 @@ export default function CreditReport() {
     const historyList = apiData.accountMonthlyPaymentHistory || [];
 
     // Metadata
-    const referenceId = apiData.enquiryDetails?.subscriberEnquiryResultID || personal.consumerID || "N/A";
+    // XDS Reference = consumerID from the API response
+    const referenceId = personal.consumerID || apiData.enquiryDetails?.subscriberEnquiryResultID || "N/A";
     const dateIssued = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
 
     // Score Dashboard
@@ -309,8 +327,10 @@ export default function CreditReport() {
       riskStatus = rawScore < 500 ? "High Risk" : rawScore < 700 ? "Medium Risk" : "Low Risk";
     }
 
-    const totalArrearsGHS = parseFloat(acctSummary.totalAmountInArrearGHS) || 0;
-    const activeArrearsCount = parseInt(acctSummary.totalAccountInArrearGHS, 10) || 0;
+    // Strip commas from API number strings before parsing (e.g. "29,890.00" → 29890)
+    const stripCommas = (val) => String(val || '').replace(/,/g, '');
+    const totalArrearsGHS = parseFloat(stripCommas(acctSummary.totalAmountInArrearGHS)) || 0;
+    const activeArrearsCount = parseInt(stripCommas(acctSummary.totalAccountInArrearGHS), 10) || 0;
 
     let decisionSignal = "APPROVE";
     let decisionNote = "Low Risk profile";
@@ -321,9 +341,9 @@ export default function CreditReport() {
       decisionTrend = "Declining ↓";
     }
 
-    const totalExposure = parseFloat(acctSummary.totalOutstandingdebtGHS) || 0;
-    const totalMonthlyRepayment = parseFloat(acctSummary.totalMonthlyInstalmentGHS) || 0;
-    const activeFacilitiesCount = parseInt(acctSummary.totalActiveAccountsGHS, 10) || 0;
+    const totalExposure = parseFloat(stripCommas(acctSummary.totalOutstandingdebtGHS)) || 0;
+    const totalMonthlyRepayment = parseFloat(stripCommas(acctSummary.totalMonthlyInstalmentGHS)) || 0;
+    const activeFacilitiesCount = parseInt(stripCommas(acctSummary.totalActiveAccountsGHS), 10) || 0;
 
     // Identity details
     const fullName = `${personal.firstName || ""} ${personal.otherNames || ""} ${personal.surname || ""}`.replace(/\s+/g, ' ').trim() || "KINGSLEY OKYERE";
@@ -386,10 +406,25 @@ export default function CreditReport() {
       { indicatorName: "Financial Stress Signals", status: activeArrearsCount > 0 ? "STRESSED" : "STABLE", interpretation: activeArrearsCount > 0 ? "Active default triggers in portfolio" : "No salary interruption flags detected" }
     ];
 
-    // Heatmap months mapping (last 12 months)
+    // Heatmap months mapping (all 24 months with month-year labels)
     const heatmapMonths = [];
     const primaryHistory = historyList[0] || {};
-    for (let i = 12; i >= 1; i--) {
+    const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    // Determine the reference date from the first valid mH key, fall back to today
+    let refYear = new Date().getFullYear();
+    let refMonth = new Date().getMonth(); // 0-indexed
+    const mH01Val = primaryHistory['mH01'] || '';
+    if (mH01Val) {
+      // Format is typically "MMM YYYY" e.g. "May 2025"
+      const parts = mH01Val.trim().split(/\s+/);
+      if (parts.length === 3) {
+        const mIdx = SHORT_MONTHS.findIndex(m => m.toLowerCase() === parts[0].toLowerCase().slice(0, 3));
+        if (mIdx !== -1) refMonth = mIdx;
+        const yr = parseInt(parts[1], 10);
+        if (!isNaN(yr)) refYear = yr;
+      }
+    }
+    for (let i = 24; i >= 1; i--) {
       const padIndex = String(i).padStart(2, '0');
       const headerKey = `mH${padIndex}`;
       const valueKey = `m${padIndex}`;
@@ -397,7 +432,20 @@ export default function CreditReport() {
       const headerVal = primaryHistory[headerKey] || "";
       const statusVal = primaryHistory[valueKey] || "";
       
-      let monthName = headerVal.split(' ')[1] || `M${13 - i}`;
+      // Build month label: prefer the API header, otherwise compute from refDate going back
+      let monthLabel;
+      if (headerVal.trim()) {
+        // API gives e.g. "May 2025" — display as "May '25"
+        const parts = headerVal.trim().split(/\s+/);
+        monthLabel = parts.length === 2
+          ? `${parts[0]} '${String(parts[1]).slice(-2)}`
+          : headerVal.trim();
+      } else {
+        // Compute: mH01 = refMonth/refYear, mH02 = one month earlier, etc.
+        const offset = i - 1; // months before the reference month
+        const d = new Date(refYear, refMonth - offset, 1);
+        monthLabel = `${SHORT_MONTHS[d.getMonth()]} '${String(d.getFullYear()).slice(-2)}`;
+      }
       
       let statusClass = "nodata";
       if (statusVal === "C" || statusVal === "0" || statusVal === "00") {
@@ -411,7 +459,7 @@ export default function CreditReport() {
       }
       
       heatmapMonths.push({
-        name: monthName,
+        name: monthLabel,
         status: statusClass
       });
     }
@@ -432,20 +480,48 @@ export default function CreditReport() {
         refi = "Med";
       }
 
-      // 24 month behavior mapping
+      // 24-month behaviour mapping — each entry is {status, month}
+      const FAC_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      // Derive reference date from mH01 of this facility's history record
+      let facRefYear = new Date().getFullYear();
+      let facRefMonth = new Date().getMonth(); // 0-indexed
+      const facMH01 = detailsHist['mH01'] || '';
+      if (facMH01) {
+        const p = facMH01.trim().split(/\s+/);
+        if (p.length === 2) {
+          const mi = FAC_MONTHS.findIndex(m => m.toLowerCase() === p[0].toLowerCase().slice(0, 3));
+          if (mi !== -1) facRefMonth = mi;
+          const yr = parseInt(p[1], 10);
+          if (!isNaN(yr)) facRefYear = yr;
+        }
+      }
       const repaymentHistory24 = [];
       for (let k = 24; k >= 1; k--) {
         const padK = String(k).padStart(2, '0');
         const valK = detailsHist[`m${padK}`] || "";
-        if (valK === "C" || valK === "0" || valK === "00") {
-          repaymentHistory24.push("C");
-        } else if (valK === "1" || valK === "10" || valK === "2" || valK === "20") {
-          repaymentHistory24.push("L");
-        } else if (valK === "#" || valK === "") {
-          repaymentHistory24.push("X");
+        const hdrK = detailsHist[`mH${padK}`] || "";
+        // Build month label
+        let monthLabel;
+        if (hdrK.trim()) {
+          const p = hdrK.trim().split(/\s+/);
+          monthLabel = p.length === 2 ? `${p[0]} '${String(p[1]).slice(-2)}` : hdrK.trim();
         } else {
-          repaymentHistory24.push("M");
+          const offset = k - 1;
+          const d = new Date(facRefYear, facRefMonth - offset, 1);
+          monthLabel = `${FAC_MONTHS[d.getMonth()]} '${String(d.getFullYear()).slice(-2)}`;
         }
+        // Map status code
+        let statusCode;
+        if (valK === "C" || valK === "0" || valK === "00") {
+          statusCode = "C";
+        } else if (valK === "1" || valK === "10" || valK === "2" || valK === "20") {
+          statusCode = "L";
+        } else if (valK === "#" || valK === "") {
+          statusCode = "X";
+        } else {
+          statusCode = "M";
+        }
+        repaymentHistory24.push({ status: statusCode, month: monthLabel });
       }
 
       return {
@@ -460,11 +536,11 @@ export default function CreditReport() {
         refi: refi,
         details: {
           accountNumber: item.accountNo || "N/A",
-          lastPaymentStatus: repaymentHistory24[repaymentHistory24.length - 1] === "C" ? "ON TIME" : "LATE",
-          currentArrearsDpd: item.amountOverdue ? `GHS ${parseFloat(item.amountOverdue).toLocaleString()}` : "GHS 0",
+          lastPaymentStatus: repaymentHistory24[repaymentHistory24.length - 1]?.status === "C" ? "ON TIME" : "LATE",
+          currentArrearsDpd: item.amountOverdue ? `GHS ${parseFloat(stripCommas(item.amountOverdue)).toLocaleString()}` : "GHS 0",
           interestProfile: item.indicatorDescription?.toLowerCase().includes("micro") ? "HIGH" : "STANDARD",
           dateDisbursed: formatDateStr(item.dateAccountOpened),
-          installmentAmount: item.instalmentAmount ? `GHS ${parseFloat(item.instalmentAmount).toLocaleString()}` : "GHS 0",
+          installmentAmount: item.instalmentAmount ? `GHS ${parseFloat(stripCommas(item.instalmentAmount)).toLocaleString()}` : "GHS 0",
           expiryDate: formatDateStr(item.closedDate),
           lastUpdatedDate: formatDateStr(item.changedOnDate || item.lastUpdatedDate),
           repaymentHistory24
@@ -546,7 +622,7 @@ export default function CreditReport() {
         requestingInstitution: "ABC Rural Bank Ltd.",
         accessedBy: "Abena Amponsah",
         title: "Regional Manager",
-        purpose: "Credit Assessment"
+        purpose: purposeOfEnquiry
       },
       dashboard: {
         creditScore: rawScore,
@@ -555,7 +631,7 @@ export default function CreditReport() {
         decisionSignal,
         decisionNote,
         decisionTrend,
-        probabilityOfDefault: activeArrearsCount > 0 ? "24.5%" : "3.8%",
+        probabilityOfDefault: activeArrearsCount > 0 ? "75.3%" : "3.8%",
         stressForecast: activeArrearsCount > 0 ? "Caution" : "Stable",
         affordabilityStatus: totalDSR > 40 ? "CRITICAL" : "HEALTHY",
         dsrText: `DSR ${totalDSR}% | Target < 40%`,
@@ -588,7 +664,7 @@ export default function CreditReport() {
       creditHealth: {
         indicators: healthIndicators,
         analytics: {
-          onTimeRatio: activeArrearsCount > 0 ? "70%" : "100%",
+          onTimeRatio: activeArrearsCount > 0 ? "30%" : "100%",
           avgDaysPastDue: activeArrearsCount > 0 ? "45 Days" : "0 Days",
           worstDelinquency: delRating.highestDelinquencyRating ? `${delRating.highestDelinquencyRating} DPD` : "0 DPD",
           consecutiveOnTime: activeArrearsCount > 0 ? "0 Months" : "24 Months",
@@ -633,7 +709,7 @@ export default function CreditReport() {
         verificationCheckRequired: "Latest salary pay slips & current bank statements",
         collateralRequirement: activeArrearsCount > 0 ? "Security / Guarantee Required" : "Not mandatory",
         riskClassifications: {
-          probabilityOfDefault: activeArrearsCount > 0 ? "High (24.5%)" : "Low (3.8%)",
+          probabilityOfDefault: activeArrearsCount > 0 ? "High (75.6%)" : "Low (3.8%)",
           refinanceProbability: activeArrearsCount > 0 ? "LOW (Arrears present)" : "HIGH (Refinance candidate)",
           crossSellPropensity: "MEDIUM",
           churnRisk: "LOW",
@@ -656,7 +732,7 @@ export default function CreditReport() {
     };
   };
 
-  const report = mapApiDataToReport(rawReportData);
+  const report = mapApiDataToReport(rawReportData, enquiryReason);
 
   // ==========================================
   // RENDER LOGIN SCREEN (IF NO TICKET ACTIVE)
@@ -701,7 +777,7 @@ export default function CreditReport() {
             letterSpacing: '0.05em',
             color: 'var(--green-300)'
           }}>
-            CREDIT SYSTEM GATEWAY
+            SMART CREDIT REPORT LOGIN
           </h2>
           
           <p style={{
@@ -711,7 +787,7 @@ export default function CreditReport() {
             textAlign: 'center',
             lineHeight: '1.4'
           }}>
-            Authorize your credentials of choice below to look up session security tickets.
+            Enter Your Credentials Below
           </p>
 
           <form onSubmit={handleLogin} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
@@ -754,7 +830,7 @@ export default function CreditReport() {
               }}>Password</label>
               <input
                 type="password"
-                placeholder="Enter Password"
+                placeholder="Enter Password (Case Sensitive)"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 style={{
@@ -804,7 +880,7 @@ export default function CreditReport() {
                 marginTop: '10px'
               }}
             >
-              Sign In to System
+              Sign In
             </button>
           </form>
 
@@ -911,7 +987,7 @@ export default function CreditReport() {
             textAlign: 'center',
             lineHeight: '1.4'
           }}>
-            Logged in as <strong>{loginUsername}</strong>. Input consumer details below. Note that matches are executed using only **Identification** and **Date of Birth**.
+            Logged in as <strong>{loginDisplayName || loginUsername}</strong>. Input consumer details below.
           </p>
 
           {/* Form */}
@@ -930,7 +1006,7 @@ export default function CreditReport() {
                   textTransform: 'uppercase',
                   fontWeight: 'bold',
                   marginBottom: '6px'
-                }}>Consumer Full Name (UI Placeholder)</label>
+                }}>Consumer Full Name</label>
                 <input
                   type="text"
                   value={searchName}
@@ -943,7 +1019,8 @@ export default function CreditReport() {
                     background: 'rgba(0,0,0,0.2)',
                     color: '#ffffff',
                     fontSize: '0.85rem',
-                    outline: 'none'
+                    outline: 'none',
+                    textTransform: 'uppercase'
                   }}
                 />
               </div>
@@ -956,7 +1033,7 @@ export default function CreditReport() {
                   textTransform: 'uppercase',
                   fontWeight: 'bold',
                   marginBottom: '6px'
-                }}>Date of Birth (Used in search)</label>
+                }}>Date of Birth</label>
                 <input
                   type="date"
                   value={searchDob}
@@ -969,7 +1046,8 @@ export default function CreditReport() {
                     background: 'rgba(0,0,0,0.2)',
                     color: '#ffffff',
                     fontSize: '0.85rem',
-                    outline: 'none'
+                    outline: 'none',
+                    textTransform: 'uppercase'
                   }}
                   required
                 />
@@ -983,7 +1061,7 @@ export default function CreditReport() {
                   textTransform: 'uppercase',
                   fontWeight: 'bold',
                   marginBottom: '6px'
-                }}>Identification Number (Used in search)</label>
+                }}>Identification Number</label>
                 <input
                   type="text"
                   value={searchId}
@@ -1003,7 +1081,44 @@ export default function CreditReport() {
                 />
               </div>
 
-              <div>
+              {/* Enquiry Reason */}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '0.72rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  textTransform: 'uppercase',
+                  fontWeight: 'bold',
+                  marginBottom: '6px'
+                }}>Purpose / Enquiry Reason</label>
+                <select
+                  value={enquiryReason}
+                  onChange={(e) => setEnquiryReason(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'rgba(0,0,0,0.3)',
+                    color: '#ffffff',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="Credit Assessment" style={{ background: '#1a1a2e', color: '#fff' }}>Credit Assessment</option>
+                  <option value="Account Review" style={{ background: '#1a1a2e', color: '#fff' }}>Account Review</option>
+                  <option value="Loan Application" style={{ background: '#1a1a2e', color: '#fff' }}>Loan Application</option>
+                  <option value="Mortgage Application" style={{ background: '#1a1a2e', color: '#fff' }}>Mortgage Application</option>
+                  <option value="Pre-Screening" style={{ background: '#1a1a2e', color: '#fff' }}>Pre-Screening</option>
+                  <option value="Employment Verification" style={{ background: '#1a1a2e', color: '#fff' }}>Employment Verification</option>
+                  <option value="Insurance Underwriting" style={{ background: '#1a1a2e', color: '#fff' }}>Insurance Underwriting</option>
+                  <option value="Debt Recovery" style={{ background: '#1a1a2e', color: '#fff' }}>Debt Recovery</option>
+                  <option value="Test" style={{ background: '#1a1a2e', color: '#fff' }}>Test</option>
+                </select>
+              </div>
+
+             {/* <div>
                 <label style={{
                   display: 'block',
                   fontSize: '0.72rem',
@@ -1027,7 +1142,7 @@ export default function CreditReport() {
                     outline: 'none'
                   }}
                 />
-              </div>
+              </div> */}
             </div>
 
             {/* Error alerts */}
@@ -1123,7 +1238,7 @@ export default function CreditReport() {
                         {consumer.firstName} {consumer.surname}
                       </strong>
                       <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.6)' }}>
-                        ID Number: {consumer.idNo || 'N/A'} | DOB: {formatDateStr(consumer.birthDate)}
+                        XDS Ref No: {consumer.consumerID || 'N/A'} | DOB: {formatDateStr(consumer.birthDate)}
                       </span>
                       <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.6)' }}>
                         Address: {consumer.address || 'N/A'}
@@ -1505,7 +1620,7 @@ export default function CreditReport() {
                 📷
               </div>
               <div style={{ marginTop: "8px", fontSize: "0.75rem", fontWeight: 'bold', textAlign: "center" }}>
-                Passport Silhouette
+                Borrower Portrait
               </div>
             </div>
 
@@ -1739,7 +1854,7 @@ export default function CreditReport() {
             <div className="heatmap-header-title">
               12-Month Payment Heatmap (Chronological order)
             </div>
-            <div className="heatmap-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '10px' }}>
+            <div className="heatmap-grid" style={{ display: 'grid', gap: '10px' }}>
               {report.creditHealth.heatmapMonths.map((m, idx) => (
                 <div key={idx} className="heatmap-cell" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <span className="heatmap-month" style={{ fontSize: '0.7rem', color: 'var(--gray-700)', marginBottom: '4px' }}>{m.name}</span>
@@ -1870,25 +1985,28 @@ export default function CreditReport() {
                 </div>
               </div>
 
-              {/* Account detailed 24-month behaviour */}
+              {/* Account detailed 24-month behaviour — 2 rows × 12 */}
               <div className="facility-payment-history" style={{ borderTop: '1px solid var(--gray-200)', paddingTop: '15px' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>24-Month Repayment History Grid</span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '6px' }}>
-                  {row.details.repaymentHistory24.slice(-12).map((status, index) => (
-                    <div key={index} className={getCellClass(status)} style={{
-                      padding: '6px',
-                      borderRadius: '4px',
-                      textAlign: 'center',
-                      fontSize: '0.75rem',
-                      background: status === 'C' ? 'var(--green-100)' : status === 'L' ? '#fdf5e6' : status === 'M' ? '#fdf0f0' : '#f4f4f4',
-                      color: status === 'C' ? 'var(--green-800)' : status === 'L' ? '#8b6508' : status === 'M' ? '#b22222' : 'var(--gray-500)',
-                      border: '1px solid ' + (status === 'C' ? 'var(--green-300)' : status === 'L' ? '#f5deb3' : status === 'M' ? '#fbc4c4' : 'var(--gray-300)')
-                    }}>
-                      <div style={{ fontWeight: 'bold' }}>{getCellLabel(status)}</div>
-                      <div style={{ fontSize: '0.55rem', color: 'var(--gray-500)' }}>M{12 - index}</div>
-                    </div>
-                  ))}
-                </div>
+                {/* Row 1: months 1-12 (oldest → index 0-11) */}
+                {[row.details.repaymentHistory24.slice(0, 12), row.details.repaymentHistory24.slice(12, 24)].map((rowSlice, rowIdx) => (
+                  <div key={rowIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '5px', marginBottom: rowIdx === 0 ? '6px' : 0 }}>
+                    {rowSlice.map((cell, index) => (
+                      <div key={index} style={{
+                        padding: '5px 3px',
+                        borderRadius: '4px',
+                        textAlign: 'center',
+                        fontSize: '0.72rem',
+                        background: cell.status === 'C' ? 'var(--green-100)' : cell.status === 'L' ? '#fdf5e6' : cell.status === 'M' ? '#fdf0f0' : '#f4f4f4',
+                        color: cell.status === 'C' ? 'var(--green-800)' : cell.status === 'L' ? '#8b6508' : cell.status === 'M' ? '#b22222' : 'var(--gray-500)',
+                        border: '1px solid ' + (cell.status === 'C' ? 'var(--green-300)' : cell.status === 'L' ? '#f5deb3' : cell.status === 'M' ? '#fbc4c4' : 'var(--gray-300)')
+                      }}>
+                        <div style={{ fontWeight: '700' }}>{getCellLabel(cell.status)}</div>
+                        <div style={{ fontSize: '0.5rem', marginTop: '2px', color: 'inherit', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cell.month}</div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             </div>
           ))}
